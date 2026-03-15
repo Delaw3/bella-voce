@@ -40,7 +40,7 @@ export async function sendMail({ to, subject, text, html, attachments }: MailPay
   ensureMailCredentials();
 
   return transporter.sendMail({
-    from: `"Bella Voce Choir" <${emailUser}>`,
+    from: `"Bella Voce Choir Support" <${emailUser}>`,
     to,
     subject,
     text,
