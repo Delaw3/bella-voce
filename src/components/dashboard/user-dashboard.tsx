@@ -120,6 +120,7 @@ export function UserDashboard({ firstName, role }: UserDashboardProps) {
   const [quickAccess, setQuickAccess] = useState<QuickAccessKey[]>(defaultQuickAccess);
   const [isLoading, setIsLoading] = useState(true);
   const [isActionLoading, setIsActionLoading] = useState(false);
+  const [actionLoadingText, setActionLoadingText] = useState("Opening...");
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false);
   const [isPullRefreshing, setIsPullRefreshing] = useState(false);
@@ -291,7 +292,8 @@ export function UserDashboard({ firstName, role }: UserDashboardProps) {
     router.refresh();
   }
 
-  async function runWithLoader(action: () => void | Promise<void>) {
+  async function runWithLoader(action: () => void | Promise<void>, loadingText = "Opening...") {
+    setActionLoadingText(loadingText);
     setIsActionLoading(true);
     try {
       await action();
@@ -304,49 +306,49 @@ export function UserDashboard({ firstName, role }: UserDashboardProps) {
     if (feature === "choir-finance") {
       void runWithLoader(async () => {
         router.push("/dashboard/choir-finance");
-      });
+      }, "Opening Choir Finance...");
       return;
     }
     if (feature === "complaint") {
       void runWithLoader(async () => {
         router.push("/dashboard/complaint");
-      });
+      }, "Opening Complaint...");
       return;
     }
     if (feature === "pay") {
       void runWithLoader(async () => {
         router.push("/dashboard/pay");
-      });
+      }, "Opening Payment...");
       return;
     }
     if (feature === "payment-history") {
       void runWithLoader(async () => {
         router.push("/dashboard/pay/history");
-      });
+      }, "Opening Payment History...");
       return;
     }
     if (feature === "song-selections") {
       void runWithLoader(async () => {
         router.push("/dashboard/song-selections");
-      });
+      }, "Opening Song Selections...");
       return;
     }
     if (feature === "attendance-history") {
       void runWithLoader(async () => {
         router.push("/dashboard/attendance-history");
-      });
+      }, "Opening Attendance History...");
       return;
     }
     void runWithLoader(async () => {
       setActiveSheet(feature as ActiveSheet);
-    });
+    }, "Opening...");
   }
 
   function openQuickAccess(feature: QuickAccessKey) {
     if (feature === "notifications") {
       void runWithLoader(async () => {
         await openNotifications();
-      });
+      }, "Opening Notifications...");
       return;
     }
 
@@ -371,14 +373,14 @@ export function UserDashboard({ firstName, role }: UserDashboardProps) {
   function requestLogoutConfirmation() {
     void runWithLoader(async () => {
       setIsLogoutConfirmOpen(true);
-    });
+    }, "Opening Logout...");
   }
 
   async function confirmLogout() {
     setIsLogoutConfirmOpen(false);
     await runWithLoader(async () => {
       await logout();
-    });
+    }, "Logging out...");
   }
 
   async function refreshDashboardFromPull() {
@@ -441,7 +443,6 @@ export function UserDashboard({ firstName, role }: UserDashboardProps) {
   }
 
   const homeHint = useMemo(() => "Tap any feature to open details.", []);
-  const pullProgress = Math.min(1, pullDistance / PULL_REFRESH_TRIGGER);
   const showPullRefresh = pullDistance > 0 || isPullRefreshing;
 
   return (
@@ -458,25 +459,23 @@ export function UserDashboard({ firstName, role }: UserDashboardProps) {
         }`}
         style={{ transform: `translate(-50%, ${showPullRefresh ? Math.max(0, pullDistance - 18) : -16}px)` }}
       >
-        <div className="flex items-center gap-2 rounded-full border border-[#9FD6D5]/80 bg-white/95 px-4 py-2 text-sm font-semibold text-[#1E8C8A] shadow-[0_14px_32px_rgba(31,41,55,0.14)] backdrop-blur">
+        <div className="flex h-12 w-12 items-center justify-center rounded-full border border-[#9FD6D5]/80 bg-white/95 text-[#1E8C8A] shadow-[0_14px_32px_rgba(31,41,55,0.14)] backdrop-blur">
           <span
-            className={`inline-flex h-5 w-5 items-center justify-center rounded-full border border-[#9FD6D5] bg-[#EAF9F8] ${
+            className={`inline-flex h-7 w-7 items-center justify-center rounded-full border border-[#9FD6D5] bg-[#EAF9F8] ${
               isPullRefreshing ? "animate-spin" : ""
             }`}
           >
             <svg
               viewBox="0 0 24 24"
-              className="h-3.5 w-3.5"
+              className="h-4 w-4"
               fill="none"
               stroke="currentColor"
               strokeWidth="1.8"
-              style={{ transform: isPullRefreshing ? undefined : `rotate(${pullProgress * 180}deg)` }}
             >
-              <path d="M12 5v14" />
-              <path d="m7 10 5-5 5 5" />
+              <path d="M20 12a8 8 0 1 1-2.34-5.66" />
+              <path d="M20 4v5h-5" />
             </svg>
           </span>
-          <span>{isPullRefreshing ? "Refreshing dashboard..." : pullDistance >= PULL_REFRESH_TRIGGER ? "Release to refresh" : "Pull to refresh"}</span>
         </div>
       </div>
 
@@ -490,27 +489,27 @@ export function UserDashboard({ firstName, role }: UserDashboardProps) {
             onAvatarClick={() =>
               void runWithLoader(async () => {
                 setActiveSheet("profile");
-              })
+              }, "Opening Profile...")
             }
             onOpenNotifications={() =>
               void runWithLoader(async () => {
                 await openNotifications();
-              })
+              }, "Opening Notifications...")
             }
             onOpenEditProfile={() =>
               void runWithLoader(async () => {
                 setActiveSheet("edit-profile");
-              })
+              }, "Opening Edit Profile...")
             }
             onOpenTheme={() =>
               void runWithLoader(async () => {
                 setActiveSheet("change-theme");
-              })
+              }, "Opening Theme...")
             }
             onOpenChangePassword={() =>
               void runWithLoader(async () => {
                 setActiveSheet("change-password");
-              })
+              }, "Opening Change Password...")
             }
             onLogout={requestLogoutConfirmation}
             isLoggingOut={isLoggingOut}
@@ -527,12 +526,12 @@ export function UserDashboard({ firstName, role }: UserDashboardProps) {
             onOpenOwed={() =>
               void runWithLoader(async () => {
                 setActiveSheet("owed-details");
-              })
+              }, "Opening Total Owed...")
             }
             onOpenPay={() =>
               void runWithLoader(async () => {
                 router.push("/dashboard/pay");
-              })
+              }, "Opening Payment...")
             }
           />
 
@@ -544,7 +543,7 @@ export function UserDashboard({ firstName, role }: UserDashboardProps) {
             onCustomize={() =>
               void runWithLoader(async () => {
                 setActiveSheet("quick-access");
-              })
+              }, "Opening Quick Access...")
             }
           />
           <p className="hidden text-center text-xs text-slate-500 md:block">{homeHint}</p>
@@ -658,37 +657,37 @@ export function UserDashboard({ firstName, role }: UserDashboardProps) {
             setActiveSheet(null);
             void runWithLoader(async () => {
               router.push("/dashboard/pay");
-            });
+            }, "Opening Payment...");
           }}
           onOpenPaymentHistory={() => {
             setActiveSheet(null);
             void runWithLoader(async () => {
               router.push("/dashboard/pay/history");
-            });
+            }, "Opening Payment History...");
           }}
           onOpenNotifications={() => {
             setActiveSheet(null);
             void runWithLoader(async () => {
               await openNotifications();
-            });
+            }, "Opening Notifications...");
           }}
           onOpenComplaint={() => {
             setActiveSheet(null);
             void runWithLoader(async () => {
               router.push("/dashboard/complaint");
-            });
+            }, "Opening Complaint...");
           }}
           onOpenSongSelections={() => {
             setActiveSheet(null);
             void runWithLoader(async () => {
               router.push("/dashboard/song-selections");
-            });
+            }, "Opening Song Selections...");
           }}
           onOpenAttendanceHistory={() => {
             setActiveSheet(null);
             void runWithLoader(async () => {
               router.push("/dashboard/attendance-history");
-            });
+            }, "Opening Attendance History...");
           }}
         />
       </DashboardSheet>
@@ -727,12 +726,10 @@ export function UserDashboard({ firstName, role }: UserDashboardProps) {
       ) : null}
 
       {isActionLoading ? (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[#1F2937]/25">
-          <div className="rounded-2xl border border-[#9FD6D5] bg-white px-4 py-3 shadow-lg">
-            <div className="flex items-center gap-2">
-              <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-[#2CA6A4] border-t-transparent" />
-              <p className="text-sm font-medium text-[#1F2937]">Loading...</p>
-            </div>
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-[var(--color-bg)]/92 backdrop-blur-[2px]">
+          <div className="flex flex-col items-center gap-3 text-[#1E8C8A]">
+            <div className="h-11 w-11 animate-spin rounded-full border-4 border-[#9FD6D5] border-t-[#1E8C8A]" />
+            <p className="text-sm font-semibold">{actionLoadingText}</p>
           </div>
         </div>
       ) : null}
@@ -760,21 +757,21 @@ export function UserDashboard({ firstName, role }: UserDashboardProps) {
           if (tab === "home") {
             void runWithLoader(async () => {
               setActiveSheet(null);
-            });
+            }, "Opening Home...");
             return;
           }
 
           if (tab === "monthly-dues" || tab === "members" || tab === "more") {
             void runWithLoader(async () => {
               setActiveSheet(tab);
-            });
+            }, `Opening ${tab === "monthly-dues" ? "Dues" : tab === "members" ? "Members" : "More"}...`);
             return;
           }
 
           if (tab === "choir-finance") {
             void runWithLoader(async () => {
               router.push("/dashboard/choir-finance");
-            });
+            }, "Opening Choir Finance...");
           }
         }}
       />
