@@ -4,7 +4,9 @@ import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { useCan } from "@/components/admin/admin-session-provider";
 import { EmptyState } from "@/components/admin/empty-state";
 import { ActionModal } from "@/components/ui/action-modal";
+import { getOptimizedSupabaseImageUrl } from "@/lib/supabase-image";
 import { EMAIL_PATTERN, formatAppDate, formatDisplayName, normalizeEmail } from "@/lib/utils";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -135,8 +137,46 @@ export function WaitlistAdmin() {
   }
 
   useEffect(() => {
-    void loadItems();
-  }, []);
+    let cancelled = false;
+
+    async function bootstrap() {
+      setIsLoading(true);
+      const params = new URLSearchParams({
+        ts: String(Date.now()),
+        page: "1",
+        limit: String(pagination.limit),
+        filter: "ALL",
+      });
+      const response = await fetch(`/api/admin/waitlist?${params.toString()}`, { cache: "no-store" });
+      const payload = (await response.json()) as {
+        items?: WaitlistItem[];
+        summary?: WaitlistSummary;
+        pagination?: WaitlistPagination;
+        message?: string;
+      };
+
+      if (cancelled) {
+        return;
+      }
+
+      if (response.ok) {
+        setItems(payload.items ?? []);
+        setSummary(payload.summary ?? { total: 0, registered: 0, waiting: 0 });
+        setPagination(payload.pagination ?? { page: 1, limit: 8, total: 0, totalPages: 1 });
+        setMessage(null);
+      } else {
+        setMessage(payload.message ?? "Unable to load waitlist records.");
+      }
+
+      setIsLoading(false);
+    }
+
+    void bootstrap();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [pagination.limit]);
 
   async function handleCreateRecord() {
     const trimmedValues = {
@@ -384,9 +424,16 @@ export function WaitlistAdmin() {
                   <div className="mt-4 rounded-[24px] border border-emerald-100 bg-emerald-50/60 p-4">
                     <div className="flex items-start gap-3">
                       {item.registeredUser.profilePicture ? (
-                        <img
-                          src={item.registeredUser.profilePicture}
+                        <Image
+                          src={getOptimizedSupabaseImageUrl(item.registeredUser.profilePicture, {
+                            width: 112,
+                            height: 112,
+                            quality: 72,
+                            resize: "cover",
+                          })}
                           alt={`${item.registeredUser.firstName} ${item.registeredUser.lastName}`}
+                          width={56}
+                          height={56}
                           className="h-14 w-14 rounded-full object-cover ring-2 ring-white"
                         />
                       ) : (

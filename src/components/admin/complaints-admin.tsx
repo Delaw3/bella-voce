@@ -4,8 +4,10 @@ import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { useCan } from "@/components/admin/admin-session-provider";
 import { EmptyState } from "@/components/admin/empty-state";
 import { ActionModal } from "@/components/ui/action-modal";
+import { getOptimizedSupabaseImageUrl } from "@/lib/supabase-image";
 import { formatAppDate, formatAppTime, formatDisplayName, formatInitials } from "@/lib/utils";
 import { AdminComplaintItem } from "@/types/admin";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 
 type ComplaintsPayload = {
@@ -132,9 +134,11 @@ export function ComplaintsAdmin() {
                   }
                   className="rounded-full transition hover:opacity-90"
                 >
-                  <img
-                    src={item.sender.profilePicture}
+                  <Image
+                    src={getOptimizedSupabaseImageUrl(item.sender.profilePicture, { width: 96, height: 96, quality: 70, resize: "cover" })}
                     alt={formatDisplayName(item.sender.firstName, item.sender.lastName)}
+                    width={48}
+                    height={48}
                     className="h-12 w-12 rounded-full object-cover ring-2 ring-[#9FD6D5]/70"
                   />
                 </button>
@@ -259,9 +263,11 @@ export function ComplaintsAdmin() {
                 </svg>
               </button>
             </div>
-            <img
-              src={previewImage.src}
+            <Image
+              src={getOptimizedSupabaseImageUrl(previewImage.src, { width: 960, quality: 80, resize: "contain" })}
               alt={previewImage.alt}
+              width={720}
+              height={720}
               className="mt-2 h-auto max-h-[70vh] w-full rounded-[24px] object-cover"
             />
           </div>

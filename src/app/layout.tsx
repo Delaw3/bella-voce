@@ -3,6 +3,7 @@ import { Manrope } from "next/font/google";
 import { AppLoader } from "@/components/app-loader";
 import { PwaRegistrar } from "@/components/pwa-registrar";
 import { ThemeProvider } from "@/components/theme-provider";
+import { ZoomGuard } from "@/components/zoom-guard";
 import { getThemeBootstrapScript } from "@/lib/theme";
 import "./globals.css";
 
@@ -33,6 +34,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
   themeColor: "#2CA6A4",
 };
 
@@ -48,6 +51,7 @@ export default function RootLayout({
       </head>
       <body className={manrope.variable}>
         <ThemeProvider>
+          <ZoomGuard />
           <PwaRegistrar />
           <AppLoader>{children}</AppLoader>
         </ThemeProvider>

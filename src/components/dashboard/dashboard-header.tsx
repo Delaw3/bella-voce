@@ -1,5 +1,6 @@
 "use client";
 
+import { getOptimizedSupabaseImageUrl } from "@/lib/supabase-image";
 import Image from "next/image";
 import { capitalizeWords } from "@/lib/utils";
 import { useEffect, useRef, useState } from "react";
@@ -78,7 +79,7 @@ export function DashboardHeader({
           >
             {profilePicture ? (
               <Image
-                src={profilePicture}
+                src={getOptimizedSupabaseImageUrl(profilePicture, { width: 80, height: 80, quality: 70, resize: "cover" })}
                 alt={`${displayName} profile`}
                 width={40}
                 height={40}

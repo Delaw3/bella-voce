@@ -2,6 +2,7 @@
 
 import { ProfileInfo } from "@/types/dashboard";
 import { ProfileImageViewer } from "@/components/dashboard/profile-image-viewer";
+import { getOptimizedSupabaseImageUrl } from "@/lib/supabase-image";
 import { capitalizeWords } from "@/lib/utils";
 import Image from "next/image";
 import { useState } from "react";
@@ -42,7 +43,7 @@ export function ProfilePanel({ profile }: ProfilePanelProps) {
             className="rounded-full transition hover:opacity-90"
           >
             <Image
-              src={profile.profilePicture}
+              src={getOptimizedSupabaseImageUrl(profile.profilePicture, { width: 96, height: 96, quality: 70, resize: "cover" })}
               alt={`${normalizedFirstName} profile`}
               width={48}
               height={48}

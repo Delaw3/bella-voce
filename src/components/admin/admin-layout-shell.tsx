@@ -3,11 +3,11 @@
 import { AdminFeatureIcon } from "@/components/admin/admin-icons";
 import { AdminSessionProvider } from "@/components/admin/admin-session-provider";
 import { ActionModal } from "@/components/ui/action-modal";
+import { LoadingNavButton } from "@/components/loading-nav-button";
 import { useTheme } from "@/components/theme-provider";
 import { ADMIN_MAIN_NAV_ITEMS, ADMIN_MORE_ITEMS } from "@/lib/admin-navigation";
 import { hasPermissionValue, isAdminRole, UserRole } from "@/lib/user-config";
 import { capitalizeWords } from "@/lib/utils";
-import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { ReactNode, useState } from "react";
 
@@ -25,6 +25,7 @@ export function AdminLayoutShell({ role, permissions, firstName, children }: Adm
   const mainItems = ADMIN_MAIN_NAV_ITEMS.filter((item) => hasPermissionValue(role, permissions, item.permission));
   const moreItems = ADMIN_MORE_ITEMS.filter((item) => hasPermissionValue(role, permissions, item.permission));
   const [confirmBackOpen, setConfirmBackOpen] = useState(false);
+  const [isLeavingAdmin, setIsLeavingAdmin] = useState(false);
 
   return (
     <AdminSessionProvider value={{ role, permissions, firstName }}>
@@ -44,7 +45,7 @@ export function AdminLayoutShell({ role, permissions, firstName, children }: Adm
                   <p className="text-xs font-semibold tracking-[0.14em] text-white/75 uppercase">Bella Voce Admin</p>
                   <h1 className="font-display text-[2rem] leading-none sm:text-[2.4rem]">Control Panel</h1>
                   <p className="mt-2 text-sm text-white/80">
-                    {isAdminRole(role)
+                  {isAdminRole(role)
                       ? `${capitalizeWords(firstName || "Admin")} signed in as ${role.replace("_", " ")}.`
                       : "Administrative access"}
                   </p>
@@ -71,17 +72,19 @@ export function AdminLayoutShell({ role, permissions, firstName, children }: Adm
                 {[...mainItems, ...moreItems].map((item) => {
                   const isActive = pathname === item.href;
                   return (
-                    <Link
+                    <LoadingNavButton
                       key={item.href}
                       href={item.href}
+                      disabled={isActive}
+                      loadingText={`Opening ${item.label}...`}
                       className={`admin-shell-desktop-link shrink-0 rounded-2xl px-4 py-2.5 text-sm font-medium transition ${
                         isActive
-                          ? "bg-white text-[#1E8C8A]"
+                          ? "cursor-default bg-white text-[#1E8C8A]"
                           : "border border-white/20 bg-white/10 text-white hover:bg-white/20"
                       }`}
                     >
                       {item.label}
-                    </Link>
+                    </LoadingNavButton>
                   );
                 })}
               </div>
@@ -103,16 +106,20 @@ export function AdminLayoutShell({ role, permissions, firstName, children }: Adm
             {mainItems.map((item) => {
               const isActive = pathname === item.href;
               return (
-                <Link
+                <LoadingNavButton
                   key={item.href}
                   href={item.href}
+                  disabled={isActive}
+                  loadingText={`Opening ${item.label}...`}
                   className={`flex flex-col items-center justify-center rounded-2xl px-2 py-2 text-[11px] font-semibold transition ${
-                    isActive ? "admin-bottom-nav-active bg-[#EAF9F8] text-[#1E8C8A]" : "admin-bottom-nav-idle text-slate-500"
+                    isActive
+                      ? "admin-bottom-nav-active cursor-default bg-[#EAF9F8] text-[#1E8C8A]"
+                      : "admin-bottom-nav-idle text-slate-500"
                   }`}
                 >
                   <AdminFeatureIcon icon={item.icon} />
                   <span className="mt-1">{item.label}</span>
-                </Link>
+                </LoadingNavButton>
               );
             })}
           </div>
@@ -123,8 +130,10 @@ export function AdminLayoutShell({ role, permissions, firstName, children }: Adm
           title="Return to Dashboard?"
           message="You are about to leave the admin control panel and go back to the main dashboard."
           confirmLabel="Back to Dashboard"
+          isProcessing={isLeavingAdmin}
           onClose={() => setConfirmBackOpen(false)}
           onConfirm={() => {
+            setIsLeavingAdmin(true);
             setConfirmBackOpen(false);
             router.push("/dashboard");
           }}

@@ -29,6 +29,21 @@ function isIosSafari() {
   return isIos && isSafari;
 }
 
+function hasInstalledApp() {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  const installed = window.localStorage.getItem(INSTALL_STATE_KEY) === "true";
+  const standalone = isStandaloneMode();
+
+  if (standalone && !installed) {
+    window.localStorage.setItem(INSTALL_STATE_KEY, "true");
+  }
+
+  return installed || standalone;
+}
+
 export function PwaInstallCta() {
   const [isVisible, setIsVisible] = useState(false);
   const [showIosHelp, setShowIosHelp] = useState(false);
@@ -42,17 +57,12 @@ export function PwaInstallCta() {
       return;
     }
 
-    const installed = window.localStorage.getItem(INSTALL_STATE_KEY) === "true";
-    const standalone = isStandaloneMode();
-
-    if (installed || standalone) {
+    if (hasInstalledApp()) {
       setIsVisible(false);
       return;
     }
 
-    if (ios) {
-      setIsVisible(true);
-    }
+    setIsVisible(true);
 
     const handleBeforeInstallPrompt = (event: Event) => {
       event.preventDefault();
@@ -98,10 +108,13 @@ export function PwaInstallCta() {
 
     if (ios) {
       setShowIosHelp(true);
+      return;
     }
+
+    setShowIosHelp(true);
   }
 
-  if (!isVisible || isStandaloneMode()) {
+  if (!isVisible) {
     return null;
   }
 
@@ -125,7 +138,11 @@ export function PwaInstallCta() {
       <ActionModal
         open={showIosHelp}
         title="Install Bella Voce"
-        message="On iPhone or iPad, tap Share, scroll to Add to Home Screen, then tap Add."
+        message={
+          ios
+            ? "On iPhone or iPad, tap Share, scroll to Add to Home Screen, then tap Add."
+            : "If the install prompt does not appear, open your browser menu and choose Install App or Add to Home Screen."
+        }
         onClose={() => setShowIosHelp(false)}
       />
     </>

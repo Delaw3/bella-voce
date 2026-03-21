@@ -1,5 +1,6 @@
 "use client";
 
+import { getOptimizedSupabaseImageUrl } from "@/lib/supabase-image";
 import Image from "next/image";
 
 type ProfileImageViewerProps = {
@@ -27,7 +28,7 @@ export function ProfileImageViewer({ isOpen, imageUrl, alt, onClose }: ProfileIm
         </button>
         <div className="overflow-hidden rounded-2xl border border-slate-100 bg-slate-50">
           <Image
-            src={imageUrl}
+            src={getOptimizedSupabaseImageUrl(imageUrl, { width: 960, quality: 80, resize: "contain" })}
             alt={alt}
             width={640}
             height={640}

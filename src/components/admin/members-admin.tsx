@@ -5,6 +5,7 @@ import { EmptyState } from "@/components/admin/empty-state";
 import { useCan } from "@/components/admin/admin-session-provider";
 import { ActionModal } from "@/components/ui/action-modal";
 import { USER_STATUSES } from "@/lib/user-config";
+import { getOptimizedSupabaseImageUrl } from "@/lib/supabase-image";
 import { formatAppDateTime, formatDisplayName, formatInitials } from "@/lib/utils";
 import { AdminMemberItem } from "@/types/admin";
 import Image from "next/image";
@@ -219,7 +220,7 @@ export function MembersAdmin({ currentRole }: MembersAdminProps) {
                         <div className="flex items-center gap-3">
                           {member.profilePicture ? (
                             <Image
-                              src={member.profilePicture}
+                              src={getOptimizedSupabaseImageUrl(member.profilePicture, { width: 80, height: 80, quality: 70, resize: "cover" })}
                               alt={`${member.firstName} ${member.lastName}`}
                               width={40}
                               height={40}
@@ -290,7 +291,12 @@ export function MembersAdmin({ currentRole }: MembersAdminProps) {
               <div className="flex items-center gap-3">
                 {selectedMember.profilePicture ? (
                   <Image
-                    src={selectedMember.profilePicture}
+                    src={getOptimizedSupabaseImageUrl(selectedMember.profilePicture, {
+                      width: 160,
+                      height: 160,
+                      quality: 72,
+                      resize: "cover",
+                    })}
                     alt={`${selectedMember.firstName} ${selectedMember.lastName}`}
                     width={64}
                     height={64}

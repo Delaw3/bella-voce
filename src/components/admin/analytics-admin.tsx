@@ -1,6 +1,7 @@
 "use client";
 
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
+import { getOptimizedSupabaseImageUrl } from "@/lib/supabase-image";
 import { formatDisplayName, formatInitials } from "@/lib/utils";
 import Image from "next/image";
 import { useEffect, useState } from "react";
@@ -117,7 +118,7 @@ export function AnalyticsAdmin() {
                 </span>
                 {item.profilePicture ? (
                   <Image
-                    src={item.profilePicture}
+                    src={getOptimizedSupabaseImageUrl(item.profilePicture, { width: 80, height: 80, quality: 70, resize: "cover" })}
                     alt={formatDisplayName(item.firstName, item.lastName)}
                     width={40}
                     height={40}

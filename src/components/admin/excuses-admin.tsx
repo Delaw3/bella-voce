@@ -4,6 +4,7 @@ import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { useCan } from "@/components/admin/admin-session-provider";
 import { EmptyState } from "@/components/admin/empty-state";
 import { ActionModal } from "@/components/ui/action-modal";
+import { getOptimizedSupabaseImageUrl } from "@/lib/supabase-image";
 import { excuseStatusClasses } from "@/lib/status-styles";
 import { formatAppDate, formatAppTime, formatDisplayName, formatInitials } from "@/lib/utils";
 import { AdminExcuseItem } from "@/types/admin";
@@ -159,7 +160,7 @@ export function ExcusesAdmin() {
                     className="shrink-0"
                   >
                     <Image
-                      src={item.user.profilePicture}
+                      src={getOptimizedSupabaseImageUrl(item.user.profilePicture, { width: 88, height: 88, quality: 70, resize: "cover" })}
                       alt={formatDisplayName(item.user.firstName, item.user.lastName)}
                       width={44}
                       height={44}
@@ -281,7 +282,7 @@ export function ExcusesAdmin() {
             </div>
             <div className="mt-4 overflow-hidden rounded-[24px] bg-[#F8FAFA]">
               <Image
-                src={previewImage.src}
+                src={getOptimizedSupabaseImageUrl(previewImage.src, { width: 960, quality: 80, resize: "contain" })}
                 alt={previewImage.alt || "Profile picture"}
                 width={720}
                 height={720}

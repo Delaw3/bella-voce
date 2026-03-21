@@ -4,6 +4,7 @@ import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { useCan } from "@/components/admin/admin-session-provider";
 import { EmptyState } from "@/components/admin/empty-state";
 import { excuseStatusClasses } from "@/lib/status-styles";
+import { getOptimizedSupabaseImageUrl } from "@/lib/supabase-image";
 import { formatAppDate, formatAppTime, formatChoirPost, formatDisplayName, formatInitials } from "@/lib/utils";
 import Image from "next/image";
 import { useEffect, useState } from "react";
@@ -305,7 +306,7 @@ export function AttendanceAdmin() {
                   <div className="flex items-center gap-3">
                     {item.profilePicture ? (
                       <Image
-                        src={item.profilePicture}
+                        src={getOptimizedSupabaseImageUrl(item.profilePicture, { width: 96, height: 96, quality: 70, resize: "cover" })}
                         alt={displayName}
                         width={48}
                         height={48}

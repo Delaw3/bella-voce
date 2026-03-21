@@ -4,6 +4,7 @@ import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { useCan } from "@/components/admin/admin-session-provider";
 import { EmptyState } from "@/components/admin/empty-state";
 import { ActionModal } from "@/components/ui/action-modal";
+import { getOptimizedSupabaseImageUrl } from "@/lib/supabase-image";
 import { formatAppDateTime, formatDisplayName } from "@/lib/utils";
 import {
   AdminAccountabilityAdjustmentItem,
@@ -227,7 +228,7 @@ export function AccountabilityAdmin() {
               <div className="flex items-center gap-3">
                 {item.profilePicture ? (
                   <Image
-                    src={item.profilePicture}
+                    src={getOptimizedSupabaseImageUrl(item.profilePicture, { width: 88, height: 88, quality: 70, resize: "cover" })}
                     alt={formatDisplayName(item.firstName, item.lastName)}
                     width={44}
                     height={44}

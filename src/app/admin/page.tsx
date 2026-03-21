@@ -1,8 +1,8 @@
 import { AdminFeatureIcon, AdminIconName } from "@/components/admin/admin-icons";
+import { LoadingNavButton } from "@/components/loading-nav-button";
 import { getAdminDashboardSummary } from "@/lib/admin-dashboard";
 import { requirePermissionPageAccess } from "@/lib/access-control";
 import { hasPermissionValue, resolvePermissions } from "@/lib/user-config";
-import Link from "next/link";
 
 const adminCards = [
   { href: "/admin/members", label: "Members", icon: "members" as AdminIconName, description: "Search members, update posts, and manage profiles." },
@@ -100,9 +100,10 @@ export default async function AdminHomePage() {
                                               : hasPermissionValue(user.role, permissions, "roles_permissions.view"),
               )
               .map((card) => (
-                <Link
+                <LoadingNavButton
                   key={card.href}
                   href={card.href}
+                  loadingText={`Opening ${card.label}...`}
                   className="admin-feature-card aspect-square rounded-[24px] border border-[#9FD6D5]/70 bg-[#F8FAFA] p-4 shadow-[0_10px_24px_rgba(31,41,55,0.05)] transition hover:-translate-y-0.5 hover:border-[#2CA6A4]"
                 >
                   <div className="flex h-full flex-col justify-between">
@@ -114,7 +115,7 @@ export default async function AdminHomePage() {
                       <p className="admin-surface-copy mt-1 text-xs leading-5 text-slate-500">{card.description}</p>
                     </div>
                   </div>
-                </Link>
+                </LoadingNavButton>
               ))}
           </div>
         </div>

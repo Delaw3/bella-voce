@@ -2,6 +2,7 @@
 
 import { MemberItem } from "@/types/dashboard";
 import { ProfileImageViewer } from "@/components/dashboard/profile-image-viewer";
+import { getOptimizedSupabaseImageUrl } from "@/lib/supabase-image";
 import { capitalizeWords, formatChoirPost, isGoldChoirPost } from "@/lib/utils";
 import Image from "next/image";
 import { FormEvent, useEffect, useState } from "react";
@@ -138,7 +139,7 @@ export function MembersPanel({ initialMembers, currentUserId, onlyWithPosts = fa
                           className="rounded-full transition hover:opacity-90"
                         >
                           <Image
-                            src={member.profilePicture}
+                            src={getOptimizedSupabaseImageUrl(member.profilePicture, { width: 96, height: 96, quality: 70, resize: "cover" })}
                             alt={`${firstName} ${lastName} profile`}
                             width={48}
                             height={48}
@@ -215,7 +216,12 @@ export function MembersPanel({ initialMembers, currentUserId, onlyWithPosts = fa
                     className="rounded-full transition hover:opacity-90"
                   >
                     <Image
-                      src={selectedMember.profilePicture}
+                      src={getOptimizedSupabaseImageUrl(selectedMember.profilePicture, {
+                        width: 144,
+                        height: 144,
+                        quality: 72,
+                        resize: "cover",
+                      })}
                       alt={`${selectedMember.firstName} ${selectedMember.lastName} profile`}
                       width={72}
                       height={72}

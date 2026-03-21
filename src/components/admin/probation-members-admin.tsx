@@ -2,7 +2,9 @@
 
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { EmptyState } from "@/components/admin/empty-state";
+import { getOptimizedSupabaseImageUrl } from "@/lib/supabase-image";
 import { formatAppDate } from "@/lib/utils";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -129,9 +131,11 @@ export function ProbationMembersAdmin() {
                     className="rounded-full transition hover:opacity-90"
                     aria-label={`View ${member.firstName} ${member.lastName} profile picture`}
                   >
-                    <img
-                      src={member.profilePicture}
+                    <Image
+                      src={getOptimizedSupabaseImageUrl(member.profilePicture, { width: 112, height: 112, quality: 70, resize: "cover" })}
                       alt={`${member.firstName} ${member.lastName}`}
+                      width={56}
+                      height={56}
                       className="h-14 w-14 rounded-full object-cover ring-2 ring-[#9FD6D5]/70"
                     />
                   </button>
@@ -234,7 +238,13 @@ export function ProbationMembersAdmin() {
                 <path d="M18 6 6 18M6 6l12 12" />
               </svg>
             </button>
-            <img src={viewerImageUrl} alt="Profile preview" className="mt-8 w-full rounded-[24px] object-cover" />
+            <Image
+              src={getOptimizedSupabaseImageUrl(viewerImageUrl, { width: 960, quality: 80, resize: "contain" })}
+              alt="Profile preview"
+              width={720}
+              height={720}
+              className="mt-8 h-auto w-full rounded-[24px] object-cover"
+            />
           </div>
         </div>
       ) : null}
