@@ -54,6 +54,7 @@ export type UserRecord = {
   role: UserRole;
   permissions: PermissionKey[];
   status: UserStatus;
+  monthlyDuesRegistered: boolean;
   monthlyDuesStartYear?: number;
   removedMonthlyDuesMonths: DueMonthNumber[];
   createdAt: Date;
@@ -83,6 +84,7 @@ const userSchema = new Schema<UserRecord>(
     role: { type: String, enum: USER_ROLES, default: "USER" },
     permissions: { type: [String], enum: ALL_PERMISSIONS, default: [] },
     status: { type: String, enum: USER_STATUSES, default: "ACTIVE" },
+    monthlyDuesRegistered: { type: Boolean, default: false },
     monthlyDuesStartYear: { type: Number },
     removedMonthlyDuesMonths: { type: [Number], enum: DUE_MONTH_NUMBERS, default: [] },
   },
@@ -115,6 +117,7 @@ if (
     !existingPermissionEnumValues.includes("waitlist.create") ||
     !existingPermissionEnumValues.includes("payments.approve") ||
     !existingPermissionEnumValues.includes("payment_accounts.view") ||
+    !existingUserModel.schema.path("monthlyDuesRegistered") ||
     !existingUserModel.schema.path("monthlyDuesStartYear") ||
     !existingUserModel.schema.path("removedMonthlyDuesMonths"))
 ) {
@@ -129,6 +132,7 @@ const User =
   existingPermissionEnumValues.includes("waitlist.create") &&
   existingPermissionEnumValues.includes("payments.approve") &&
   existingPermissionEnumValues.includes("payment_accounts.view") &&
+  existingUserModel.schema.path("monthlyDuesRegistered") &&
   existingUserModel.schema.path("monthlyDuesStartYear") &&
   existingUserModel.schema.path("removedMonthlyDuesMonths")
     ? existingUserModel

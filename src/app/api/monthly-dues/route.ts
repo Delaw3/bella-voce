@@ -17,13 +17,14 @@ export async function GET(request: Request) {
   try {
     const config = await getUserMonthlyDuesConfig(user._id);
     const currentYear = new Date().getFullYear();
-    const availableYears = getAvailableMonthlyDuesYears(config.startYear, currentYear);
+    const availableYears = config.isRegistered ? getAvailableMonthlyDuesYears(config.startYear, currentYear) : [];
     const requestedYear = Number.isFinite(yearParam) && yearParam > 0 ? yearParam : config.startYear;
-    const year = Math.min(Math.max(requestedYear, config.startYear), currentYear);
+    const year = config.isRegistered ? Math.min(Math.max(requestedYear, config.startYear), currentYear) : currentYear;
     const payload = await remember(cacheKeys.userMonthlyDues(user._id.toString(), year), CACHE_TTL.userMonthlyDues, async () => {
-      const dues = await getMonthlyDuesStatus(user._id, year);
+      const dues = config.isRegistered ? await getMonthlyDuesStatus(user._id, year) : [];
 
       return {
+        isRegistered: config.isRegistered,
         year,
         availableYears,
         startYear: config.startYear,

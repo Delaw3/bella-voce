@@ -33,22 +33,24 @@ export function MonthlyDuesPanel({ debt, details, months, year, availableYears, 
             <p className="text-sm font-semibold tracking-[0.08em] text-[#1E8C8A] uppercase">Monthly Dues Years</p>
             <p className="dashboard-feature-copy mt-1 text-sm text-slate-600">View only the years and months available for your dues record.</p>
           </div>
-          <select
-            value={year}
-            onChange={(event) => void onYearChange(Number(event.target.value))}
-            className="dashboard-feature-select rounded-2xl border border-[#9FD6D5] bg-[#F8FAFA] px-4 py-3 text-sm outline-none"
-          >
-            {availableYears.map((optionYear) => (
-              <option key={optionYear} value={optionYear}>
-                {optionYear}
-              </option>
-            ))}
-          </select>
+          {availableYears.length ? (
+            <select
+              value={year}
+              onChange={(event) => void onYearChange(Number(event.target.value))}
+              className="dashboard-feature-select rounded-2xl border border-[#9FD6D5] bg-[#F8FAFA] px-4 py-3 text-sm outline-none"
+            >
+              {availableYears.map((optionYear) => (
+                <option key={optionYear} value={optionYear}>
+                  {optionYear}
+                </option>
+              ))}
+            </select>
+          ) : null}
         </div>
 
         {months.length === 0 ? (
           <p className="dashboard-feature-empty rounded-2xl border border-dashed border-slate-200 bg-white px-4 py-6 text-sm text-slate-500">
-            No monthly dues apply for {year}.
+            No monthly dues have been registered for your account yet.
           </p>
         ) : (
           <ul className="space-y-2">

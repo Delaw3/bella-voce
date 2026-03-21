@@ -48,6 +48,7 @@ export type MonthlyDueStatusItem = {
 };
 
 export type UserMonthlyDuesConfig = {
+  isRegistered: boolean;
   startYear: number;
   removedMonths: number[];
 };
@@ -95,11 +96,13 @@ export async function getUserMonthlyDuesConfig(userId: UserIdLike): Promise<User
 
   const [settings, user] = await Promise.all([
     ensureAccountabilitySettings(),
-    User.findById(toObjectId(userId)).select("monthlyDuesStartYear removedMonthlyDuesMonths").lean(),
+    User.findById(toObjectId(userId)).select("monthlyDuesRegistered monthlyDuesStartYear removedMonthlyDuesMonths").lean(),
   ]);
 
   const globalStartYear = Number(settings?.monthlyDuesStartYear || new Date().getFullYear());
+  const isRegistered = Boolean(user?.monthlyDuesRegistered || typeof user?.monthlyDuesStartYear === "number");
   return {
+    isRegistered,
     startYear: resolveUserMonthlyDuesStartYear(globalStartYear, user?.monthlyDuesStartYear),
     removedMonths: sanitizeRemovedMonths(user?.removedMonthlyDuesMonths),
   };
@@ -268,7 +271,12 @@ export async function getUserAdjustmentEntries(userId: UserIdLike) {
 export async function ensureMonthlyDuesForYear(userId: UserIdLike, year: number) {
   await connectToDatabase();
   const objectUserId = toObjectId(userId);
-  const { startYear, removedMonths } = await getUserMonthlyDuesConfig(objectUserId);
+  const { isRegistered, startYear, removedMonths } = await getUserMonthlyDuesConfig(objectUserId);
+
+  if (!isRegistered) {
+    return [];
+  }
+
   const allowedMonths = DUE_MONTH_NUMBERS.filter((month) => !removedMonths.includes(month));
 
   await MonthlyDues.deleteMany({
@@ -306,7 +314,7 @@ export async function getMonthlyDuesStatus(userId: UserIdLike, year: number): Pr
     ensureMonthlyDuesForYear(userId, year),
   ]);
 
-  if (year < config.startYear) {
+  if (!config.isRegistered || year < config.startYear) {
     return [];
   }
 
@@ -333,7 +341,7 @@ export async function getMonthlyDuesStatusThroughYear(
 ): Promise<MonthlyDueStatusItem[]> {
   const config = await getUserMonthlyDuesConfig(userId);
 
-  if (year < config.startYear) {
+  if (!config.isRegistered || year < config.startYear) {
     return [];
   }
 
@@ -479,7 +487,7 @@ export async function calculateManyUserAccountability(userIds: UserIdLike[], yea
   ]);
   const approvedOffsetsMap = await getApprovedOffsetsForUsers(objectUserIds, year);
   const users = await User.find({ _id: { $in: objectUserIds } } as never)
-    .select("monthlyDuesStartYear removedMonthlyDuesMonths")
+    .select("monthlyDuesRegistered monthlyDuesStartYear removedMonthlyDuesMonths")
     .lean();
 
   const settingsValues = {
@@ -494,6 +502,7 @@ export async function calculateManyUserAccountability(userIds: UserIdLike[], yea
     users.map((user) => [
       user._id.toString(),
       {
+        isRegistered: Boolean(user.monthlyDuesRegistered || typeof user.monthlyDuesStartYear === "number"),
         startYear: resolveUserMonthlyDuesStartYear(settingsStartYear, user.monthlyDuesStartYear),
         removedMonths: sanitizeRemovedMonths(user.removedMonthlyDuesMonths),
       },
@@ -530,9 +539,12 @@ export async function calculateManyUserAccountability(userIds: UserIdLike[], yea
         PLEDGE: 0,
       };
       const attendance = attendanceMap.get(key) ?? { lateCount: 0, absentCount: 0 };
-      const config = userConfigMap.get(key) ?? { startYear: settingsStartYear, removedMonths: [] };
+      const config = userConfigMap.get(key) ?? { isRegistered: false, startYear: settingsStartYear, removedMonths: [] };
       const paidCount = Number(paidCountMap.get(key) || 0);
-      const totalMonths = year < config.startYear ? 0 : DUE_MONTH_NUMBERS.filter((month) => !config.removedMonths.includes(month)).length;
+      const totalMonths =
+        !config.isRegistered || year < config.startYear
+          ? 0
+          : DUE_MONTH_NUMBERS.filter((month) => !config.removedMonths.includes(month)).length;
       const unpaidMonths = Math.max(0, totalMonths - paidCount);
       const monthlyDues = unpaidMonths * settingsValues.monthlyDues;
       const latenessFee = Math.max(0, attendance.lateCount * settingsValues.latenessFee - Number(offsets.LATENESS_FEE || 0));

@@ -24,6 +24,7 @@ type MonthlyDuesAdminItem = {
   lastName: string;
   email: string;
   profilePicture?: string;
+  isRegistered: boolean;
   monthlyDuesStartYear: number;
   removedMonths: number[];
   availableYears: number[];
@@ -45,6 +46,15 @@ function getSummary(item: MonthlyDuesAdminItem) {
   const paidCount = item.months.filter((month) => month.status === "PAID").length;
   const unpaidCount = item.months.length - paidCount;
   return { paidCount, unpaidCount };
+}
+
+function getPreviewMonths(removedMonths: number[], amount: number) {
+  return DUE_MONTH_NUMBERS.filter((monthNumber) => !removedMonths.includes(monthNumber)).map((monthNumber) => ({
+    month: new Date(2026, monthNumber - 1, 1).toLocaleDateString("en-GB", { month: "long" }),
+    monthNumber,
+    amount,
+    status: "NOT_PAID" as const,
+  }));
 }
 
 export function MonthlyDuesAdmin() {
@@ -192,6 +202,7 @@ export function MonthlyDuesAdmin() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         userId: selectedItem.userId,
+        register: true,
         monthlyDuesStartYear: selectedUserStartYear,
         removedMonths: selectedRemovedMonths,
       }),
@@ -208,6 +219,12 @@ export function MonthlyDuesAdmin() {
 
     setIsSavingConfig(false);
   }
+
+  const displayedMonths = selectedItem
+    ? selectedItem.isRegistered
+      ? selectedItem.months
+      : getPreviewMonths(selectedRemovedMonths, monthlyDuesAmount)
+    : [];
 
   return (
     <div className="space-y-4">
@@ -283,7 +300,7 @@ export function MonthlyDuesAdmin() {
                 <div className="min-w-0">
                   <h2 className="text-base font-semibold text-[#1F2937]">{formatDisplayName(item.firstName, item.lastName)}</h2>
                   <p className="mt-1 text-xs text-slate-500">
-                    Starts {item.monthlyDuesStartYear}
+                    {item.isRegistered ? `Starts ${item.monthlyDuesStartYear}` : "Not registered for monthly dues"}
                     {item.removedMonths.length ? ` • Removed ${item.removedMonths.length} month(s)` : ""}
                   </p>
                 </div>
@@ -293,9 +310,11 @@ export function MonthlyDuesAdmin() {
                 <div className="flex flex-wrap gap-2 text-xs font-semibold">
                   <span className="rounded-full bg-emerald-50 px-3 py-1 text-emerald-700">Paid {summary.paidCount}</span>
                   <span className="rounded-full bg-amber-50 px-3 py-1 text-amber-700">Unpaid {summary.unpaidCount}</span>
-                  <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-600">Viewing {item.selectedYear}</span>
+                  <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-600">
+                    {item.isRegistered ? `Viewing ${item.selectedYear}` : "Awaiting registration"}
+                  </span>
                 </div>
-                <span className="text-sm font-semibold text-[#1E8C8A]">Open dues</span>
+                <span className="text-sm font-semibold text-[#1E8C8A]">{item.isRegistered ? "Open dues" : "Register dues"}</span>
               </div>
             </button>
           );
@@ -359,7 +378,8 @@ export function MonthlyDuesAdmin() {
                   <label className="space-y-2">
                     <span className="text-xs font-semibold tracking-[0.08em] text-slate-500 uppercase">Viewing Year</span>
                     <select
-                      value={selectedItem.selectedYear}
+                      value={selectedItem.isRegistered ? selectedItem.selectedYear : selectedUserStartYear}
+                      disabled={!selectedItem.isRegistered}
                       onChange={(event) => {
                         const nextYear = Number(event.target.value);
                         setYear(nextYear);
@@ -367,7 +387,7 @@ export function MonthlyDuesAdmin() {
                       }}
                       className="w-full rounded-2xl border border-[#9FD6D5] bg-white px-4 py-3 text-sm outline-none"
                     >
-                      {selectedItem.availableYears.map((optionYear) => (
+                      {(selectedItem.isRegistered ? selectedItem.availableYears : [selectedUserStartYear]).map((optionYear) => (
                         <option key={optionYear} value={optionYear}>
                           {optionYear}
                         </option>
@@ -408,7 +428,7 @@ export function MonthlyDuesAdmin() {
                   onClick={() => void saveUserConfig()}
                   className="mt-4 rounded-2xl bg-[#2CA6A4] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#1E8C8A] disabled:opacity-50"
                 >
-                  {isSavingConfig ? "Saving..." : "Save User Dues Settings"}
+                  {isSavingConfig ? "Saving..." : selectedItem.isRegistered ? "Save User Dues Settings" : "Register Monthly Dues"}
                 </button>
               </section>
 
@@ -424,13 +444,15 @@ export function MonthlyDuesAdmin() {
                   </div>
                 </div>
 
-                {selectedItem.months.length === 0 ? (
+                {displayedMonths.length === 0 ? (
                   <p className="rounded-2xl border border-dashed border-slate-200 bg-white px-4 py-6 text-sm text-slate-500">
-                    No dues months apply for this member in {selectedItem.selectedYear}.
+                    {selectedItem.isRegistered
+                      ? `No dues months apply for this member in ${selectedItem.selectedYear}.`
+                      : "All months are removed. Add at least one month before registering monthly dues for this member."}
                   </p>
                 ) : (
                   <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
-                    {selectedItem.months.map((month) => {
+                    {displayedMonths.map((month) => {
                       const active = month.status === "PAID";
                       const key = `${selectedItem.userId}-${selectedItem.selectedYear}-${month.monthNumber}`;
 
@@ -438,7 +460,7 @@ export function MonthlyDuesAdmin() {
                         <button
                           key={key}
                           type="button"
-                          disabled={!canEdit || updatingKey === key}
+                          disabled={!canEdit || !selectedItem.isRegistered || updatingKey === key}
                           onClick={() => void toggleMonth(selectedItem.userId, month)}
                           className={`rounded-2xl border px-3 py-3 text-left transition ${
                             active
@@ -450,7 +472,9 @@ export function MonthlyDuesAdmin() {
                           <p className="mt-1 text-[11px] font-semibold">
                             {updatingKey === key ? "Saving..." : formatMonthlyDueStatus(month.status)}
                           </p>
-                          <p className="mt-2 text-[11px] text-slate-500">{active ? "Tap to undo" : "Tap to mark paid"}</p>
+                          <p className="mt-2 text-[11px] text-slate-500">
+                            {selectedItem.isRegistered ? (active ? "Tap to undo" : "Tap to mark paid") : "Preview before registration"}
+                          </p>
                         </button>
                       );
                     })}

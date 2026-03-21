@@ -131,7 +131,7 @@ async function getUserMonthlyDuesConfig(userId: UserIdLike) {
   await connectToDatabase();
   const [settings, user] = await Promise.all([
     ensureSettings(),
-    User.findById(toObjectId(userId)).select("monthlyDuesStartYear removedMonthlyDuesMonths").lean(),
+    User.findById(toObjectId(userId)).select("monthlyDuesRegistered monthlyDuesStartYear removedMonthlyDuesMonths").lean(),
   ]);
 
   const settingsStartYear = Number(settings?.monthlyDuesStartYear || new Date().getFullYear());
@@ -140,13 +140,22 @@ async function getUserMonthlyDuesConfig(userId: UserIdLike) {
   const removedMonths = [...new Set((user?.removedMonthlyDuesMonths ?? []).map((month) => Number(month)).filter((month) => month >= 1 && month <= 12))]
     .sort((left, right) => left - right);
 
-  return { startYear, removedMonths };
+  return {
+    isRegistered: Boolean(user?.monthlyDuesRegistered || typeof user?.monthlyDuesStartYear === "number"),
+    startYear,
+    removedMonths,
+  };
 }
 
 async function ensureMonthlyDuesForYear(userId: UserIdLike, year: number) {
   await connectToDatabase();
   const objectUserId = toObjectId(userId);
-  const { startYear, removedMonths } = await getUserMonthlyDuesConfig(objectUserId);
+  const { isRegistered, startYear, removedMonths } = await getUserMonthlyDuesConfig(objectUserId);
+
+  if (!isRegistered) {
+    return [];
+  }
+
   const allowedMonths = Array.from({ length: 12 }, (_, index) => index + 1).filter((month) => !removedMonths.includes(month));
 
   await MonthlyDues.deleteMany({
@@ -359,18 +368,20 @@ export async function getOutstandingPaymentData(userId: UserIdLike, year = new D
       const monthlyYears = Array.from({ length: Math.max(0, year - config.startYear + 1) }, (_, index) => config.startYear + index);
       const monthlyItems: PaymentItemInput[] = [];
 
-      for (const duesYear of monthlyYears) {
-        const entries = await ensureMonthlyDuesForYear(objectUserId, duesYear);
-        for (const entry of entries) {
-          if (entry.paid) continue;
-          monthlyItems.push({
-            category: "MONTHLY_DUES",
-            description: `${getMonthName(Number(entry.month))} ${duesYear} Dues`,
-            amount: Number(settings?.monthlyDues || 0),
-            month: Number(entry.month),
-            year: duesYear,
-            quantity: 1,
-          });
+      if (config.isRegistered) {
+        for (const duesYear of monthlyYears) {
+          const entries = await ensureMonthlyDuesForYear(objectUserId, duesYear);
+          for (const entry of entries) {
+            if (entry.paid) continue;
+            monthlyItems.push({
+              category: "MONTHLY_DUES",
+              description: `${getMonthName(Number(entry.month))} ${duesYear} Dues`,
+              amount: Number(settings?.monthlyDues || 0),
+              month: Number(entry.month),
+              year: duesYear,
+              quantity: 1,
+            });
+          }
         }
       }
 

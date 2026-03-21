@@ -189,9 +189,7 @@ export function UserDashboard({ firstName, role }: UserDashboardProps) {
       setMembers(membersRes.ok && membersPayload.members ? membersPayload.members : []);
       setDues(duesRes.ok && duesPayload.months ? duesPayload.months : []);
       setDuesYear(duesPayload.year ?? new Date().getFullYear());
-      setDuesAvailableYears(
-        duesRes.ok && duesPayload.availableYears?.length ? duesPayload.availableYears : [duesPayload.year ?? new Date().getFullYear()],
-      );
+      setDuesAvailableYears(duesRes.ok && duesPayload.availableYears ? duesPayload.availableYears : []);
       setProfile(profileRes.ok && profilePayload.profile ? profilePayload.profile : null);
 
       const nonBlockingMessage =
@@ -279,7 +277,7 @@ export function UserDashboard({ firstName, role }: UserDashboardProps) {
     if (response.ok) {
       setDues(payload.months ?? []);
       setDuesYear(payload.year ?? nextYear);
-      setDuesAvailableYears(payload.availableYears?.length ? payload.availableYears : [payload.year ?? nextYear]);
+      setDuesAvailableYears(payload.availableYears ?? []);
       return;
     }
 

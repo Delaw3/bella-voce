@@ -22,6 +22,7 @@ type Payload = {
   year?: number;
   month?: number;
   paid?: boolean;
+  register?: boolean;
   monthlyDuesStartYear?: number;
   removedMonths?: number[];
 };
@@ -60,22 +61,26 @@ export async function GET(request: Request) {
       : {};
 
     const users = await User.find(filter)
-      .select("firstName lastName email profilePicture monthlyDuesStartYear removedMonthlyDuesMonths")
+      .select("firstName lastName email profilePicture monthlyDuesRegistered monthlyDuesStartYear removedMonthlyDuesMonths")
       .sort({ firstName: 1, lastName: 1 })
       .lean();
 
     const items = await Promise.all(
       users.map(async (user) => {
+        const isRegistered = Boolean(user.monthlyDuesRegistered || typeof user.monthlyDuesStartYear === "number");
         const startYear = resolveUserMonthlyDuesStartYear(globalStartYear, user.monthlyDuesStartYear);
         const removedMonths = sanitizeRemovedMonths(user.removedMonthlyDuesMonths);
-        const availableYears = getAvailableMonthlyDuesYears(startYear, currentYear);
-        const selectedYear = requestedYear;
+        const availableYears = isRegistered ? getAvailableMonthlyDuesYears(startYear, currentYear) : [];
+        const selectedYear =
+          isRegistered && availableYears.length
+            ? Math.min(Math.max(requestedYear, startYear), currentYear)
+            : startYear;
         const duesEntries =
-          selectedYear >= startYear && selectedYear <= currentYear
+          isRegistered && selectedYear >= startYear && selectedYear <= currentYear
             ? await ensureMonthlyDuesForYear(new mongoose.Types.ObjectId(user._id.toString()), selectedYear)
             : [];
         const duesMap = new Map(duesEntries.map((entry) => [entry.month, entry]));
-        const months = DUE_MONTH_NUMBERS.filter((month) => !removedMonths.includes(month)).map((month) => {
+        const months = (isRegistered ? DUE_MONTH_NUMBERS.filter((month) => !removedMonths.includes(month)) : []).map((month) => {
           const entry = duesMap.get(month);
 
           return {
@@ -93,6 +98,7 @@ export async function GET(request: Request) {
           lastName: user.lastName,
           email: user.email ?? "",
           profilePicture: user.profilePicture ?? "",
+          isRegistered,
           monthlyDuesStartYear: startYear,
           removedMonths,
           availableYears,
@@ -148,6 +154,7 @@ export async function PATCH(request: Request) {
     if (Array.isArray(payload.removedMonths) || typeof payload.monthlyDuesStartYear === "number") {
       const requestedStartYear = Number(payload.monthlyDuesStartYear);
       const removedMonths = sanitizeRemovedMonths(payload.removedMonths);
+      const shouldRegister = payload.register !== false;
       const nextStartYear =
         Number.isInteger(requestedStartYear) &&
         requestedStartYear >= globalStartYear &&
@@ -171,6 +178,7 @@ export async function PATCH(request: Request) {
         new mongoose.Types.ObjectId(userId),
         {
           $set: {
+            monthlyDuesRegistered: shouldRegister,
             monthlyDuesStartYear: nextStartYear,
             removedMonthlyDuesMonths: removedMonths,
           },
@@ -207,10 +215,15 @@ export async function PATCH(request: Request) {
     }
 
     const user = await User.findById(new mongoose.Types.ObjectId(userId))
-      .select("monthlyDuesStartYear removedMonthlyDuesMonths")
+      .select("monthlyDuesRegistered monthlyDuesStartYear removedMonthlyDuesMonths")
       .lean();
+    const isRegistered = Boolean(user?.monthlyDuesRegistered || typeof user?.monthlyDuesStartYear === "number");
     const startYear = resolveUserMonthlyDuesStartYear(globalStartYear, user?.monthlyDuesStartYear);
     const removedMonths = sanitizeRemovedMonths(user?.removedMonthlyDuesMonths);
+
+    if (!isRegistered) {
+      return NextResponse.json({ message: "Register monthly dues for this member first." }, { status: 400 });
+    }
 
     if (year < startYear) {
       return NextResponse.json({ message: `This member starts owing monthly dues from ${startYear}.` }, { status: 400 });
