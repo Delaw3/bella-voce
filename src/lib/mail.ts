@@ -1,6 +1,7 @@
 import nodemailer from "nodemailer";
 import type { SendMailOptions } from "nodemailer";
 import path from "path";
+import { buildAdminWaitlistInviteTemplate } from "@/templates/admin-waitlist-invite-template";
 import { buildWaitlistEmailTemplate } from "@/templates/waitlist-email-template";
 
 type MailPayload = {
@@ -40,7 +41,7 @@ export async function sendMail({ to, subject, text, html, attachments }: MailPay
   ensureMailCredentials();
 
   return transporter.sendMail({
-    from: `"Bella Voce Choir Support" <${emailUser}>`,
+    from: `"Bella Voce Choir" <${emailUser}>`,
     to,
     subject,
     text,
@@ -56,6 +57,28 @@ export async function sendWaitlistRegistrationMail({
   registrationId,
 }: WaitlistMailPayload) {
   const template = buildWaitlistEmailTemplate({ firstName, registrationId });
+
+  return sendMail({
+    to,
+    subject: template.subject,
+    text: template.text,
+    html: template.html,
+    attachments: [
+      {
+        filename: "bella-voce-logo.png",
+        path: path.join(process.cwd(), "public", "images", "bella-voce-logo.png"),
+        cid: "bella-voce-logo",
+      },
+    ],
+  });
+}
+
+export async function sendAdminWaitlistInviteMail({
+  to,
+  firstName,
+  registrationId,
+}: WaitlistMailPayload) {
+  const template = buildAdminWaitlistInviteTemplate({ firstName, registrationId });
 
   return sendMail({
     to,

@@ -26,7 +26,7 @@ export function LoadingNavButton({ href, children, className }: LoadingNavButton
       </button>
 
       {isLoading ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#F8FAFA]/95">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--color-bg)]/95">
           <div className="h-11 w-11 animate-spin rounded-full border-4 border-[#9FD6D5] border-t-[#1E8C8A]" />
         </div>
       ) : null}

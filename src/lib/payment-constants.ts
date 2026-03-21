@@ -1,0 +1,11 @@
+export const PAYMENT_TRANSACTION_TYPES = ["ACCOUNTABILITY", "MONTHLY_DUES", "CUSTOM"] as const;
+export const PAYMENT_TRANSACTION_STATUSES = ["PENDING", "APPROVED", "REJECTED"] as const;
+export const PAYMENT_ITEM_CATEGORIES = [
+  "MONTHLY_DUES",
+  "LEVY",
+  "FINE",
+  "LATENESS_FEE",
+  "ABSENT_FEE",
+  "PLEDGE",
+  "CUSTOM",
+] as const;

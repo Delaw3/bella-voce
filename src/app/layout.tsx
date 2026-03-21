@@ -1,6 +1,9 @@
 import type { Metadata, Viewport } from "next";
-import { Cormorant_Garamond, Manrope } from "next/font/google";
+import { Manrope } from "next/font/google";
 import { AppLoader } from "@/components/app-loader";
+import { PwaRegistrar } from "@/components/pwa-registrar";
+import { ThemeProvider } from "@/components/theme-provider";
+import { getThemeBootstrapScript } from "@/lib/theme";
 import "./globals.css";
 
 const manrope = Manrope({
@@ -8,18 +11,22 @@ const manrope = Manrope({
   variable: "--font-sans",
 });
 
-const cormorant = Cormorant_Garamond({
-  subsets: ["latin"],
-  variable: "--font-display",
-});
-
 export const metadata: Metadata = {
   title: "Bella Voce",
   description: "Choir accountability and member management",
+  manifest: "/manifest.webmanifest",
   icons: {
-    icon: "/images/bella-voce-logo.png",
-    shortcut: "/images/bella-voce-logo.png",
-    apple: "/images/bella-voce-logo.png",
+    icon: [
+      { url: "/icons/icon-192x192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512x512.png", sizes: "512x512", type: "image/png" },
+    ],
+    shortcut: "/icons/icon-192x192.png",
+    apple: "/icons/apple-touch-icon.png",
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Bella Voce",
   },
 };
 
@@ -35,9 +42,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${manrope.variable} ${cormorant.variable}`}>
-        <AppLoader>{children}</AppLoader>
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: getThemeBootstrapScript() }} />
+      </head>
+      <body className={manrope.variable}>
+        <ThemeProvider>
+          <PwaRegistrar />
+          <AppLoader>{children}</AppLoader>
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -22,7 +22,7 @@ export function AppLoader({ children }: AppLoaderProps) {
     <>
       <div
         aria-hidden={!isLoading}
-        className={`fixed inset-0 z-50 flex items-center justify-center bg-[#F8FAFA] transition-opacity duration-500 ${
+        className={`fixed inset-0 z-50 flex items-center justify-center bg-[var(--color-bg)] transition-opacity duration-500 ${
           isLoading ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
       >
