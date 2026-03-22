@@ -4,6 +4,7 @@ import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { useCan } from "@/components/admin/admin-session-provider";
 import { EmptyState } from "@/components/admin/empty-state";
 import { ActionModal } from "@/components/ui/action-modal";
+import { ThemedDateInput } from "@/components/ui/themed-date-input";
 import { formatAppDate } from "@/lib/utils";
 import { AdminChoirFinanceItem } from "@/types/admin";
 import { ChoirFinanceResponse } from "@/types/dashboard";
@@ -149,11 +150,10 @@ export function ChoirFinanceAdmin() {
             placeholder="Amount"
             className="rounded-2xl border border-[#9FD6D5] bg-[#F8FAFA] px-4 py-3 text-sm outline-none"
           />
-          <input
-            type="date"
+          <ThemedDateInput
             value={form.financeDate}
-            onChange={(event) => setForm((current) => ({ ...current, financeDate: event.target.value }))}
-            className="rounded-2xl border border-[#9FD6D5] bg-[#F8FAFA] px-4 py-3 text-sm outline-none"
+            onChange={(value) => setForm((current) => ({ ...current, financeDate: value }))}
+            placeholder="Select finance date"
           />
           <button
             type="button"

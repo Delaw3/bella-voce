@@ -4,6 +4,7 @@ import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { useCan } from "@/components/admin/admin-session-provider";
 import { EmptyState } from "@/components/admin/empty-state";
 import { ActionModal } from "@/components/ui/action-modal";
+import { ThemedDateInput } from "@/components/ui/themed-date-input";
 import { formatAppDate } from "@/lib/utils";
 import { AdminSongSelectionItem } from "@/types/admin";
 import { useEffect, useState } from "react";
@@ -207,11 +208,10 @@ export function SongSelectionsAdmin() {
             placeholder="Selection title"
             className="rounded-2xl border border-[#9FD6D5] bg-[#F8FAFA] px-4 py-3 text-sm outline-none"
           />
-          <input
-            type="date"
+          <ThemedDateInput
             value={selectionDate}
-            onChange={(event) => setSelectionDate(event.target.value)}
-            className="rounded-2xl border border-[#9FD6D5] bg-[#F8FAFA] px-4 py-3 text-sm outline-none"
+            onChange={setSelectionDate}
+            placeholder="Select selection date"
           />
           <select
             value={status}

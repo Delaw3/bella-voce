@@ -9,6 +9,14 @@ type BeforeInstallPromptEvent = Event & {
 };
 
 const INSTALL_STATE_KEY = "bella-voce.pwa-installed";
+const INSTALL_PROMPT_EVENT_NAME = "bella-voce-install-prompt-available";
+const APP_INSTALLED_EVENT_NAME = "bella-voce-app-installed";
+
+declare global {
+  interface Window {
+    __bellaVoceDeferredInstallPrompt?: BeforeInstallPromptEvent | null;
+  }
+}
 
 function isStandaloneMode() {
   if (typeof window === "undefined") {
@@ -63,26 +71,29 @@ export function PwaInstallCta() {
     }
 
     setIsVisible(true);
+    setDeferredPrompt(window.__bellaVoceDeferredInstallPrompt ?? null);
 
-    const handleBeforeInstallPrompt = (event: Event) => {
-      event.preventDefault();
-      setDeferredPrompt(event as BeforeInstallPromptEvent);
+    const handlePromptAvailable = () => {
+      setDeferredPrompt(window.__bellaVoceDeferredInstallPrompt ?? null);
       setIsVisible(true);
     };
 
     const handleInstalled = () => {
       window.localStorage.setItem(INSTALL_STATE_KEY, "true");
+      window.__bellaVoceDeferredInstallPrompt = null;
       setDeferredPrompt(null);
       setShowIosHelp(false);
       setIsVisible(false);
     };
 
-    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    window.addEventListener(INSTALL_PROMPT_EVENT_NAME, handlePromptAvailable);
     window.addEventListener("appinstalled", handleInstalled);
+    window.addEventListener(APP_INSTALLED_EVENT_NAME, handleInstalled);
 
     return () => {
-      window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+      window.removeEventListener(INSTALL_PROMPT_EVENT_NAME, handlePromptAvailable);
       window.removeEventListener("appinstalled", handleInstalled);
+      window.removeEventListener(APP_INSTALLED_EVENT_NAME, handleInstalled);
     };
   }, [ios]);
 
@@ -95,6 +106,7 @@ export function PwaInstallCta() {
 
         if (choice.outcome === "accepted" && typeof window !== "undefined") {
           window.localStorage.setItem(INSTALL_STATE_KEY, "true");
+          window.__bellaVoceDeferredInstallPrompt = null;
           setIsVisible(false);
         }
 

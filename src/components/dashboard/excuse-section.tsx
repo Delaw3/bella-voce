@@ -1,5 +1,6 @@
 "use client";
 
+import { ThemedDateInput } from "@/components/ui/themed-date-input";
 import { excuseStatusClasses } from "@/lib/status-styles";
 import { ExcuseItem } from "@/types/dashboard";
 import { formatAppDate } from "@/lib/utils";
@@ -91,18 +92,13 @@ export function ExcuseSection({ initialItems }: ExcuseSectionProps) {
             className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-[#1F2937] outline-none transition focus:border-[#2CA6A4] focus:bg-white"
           />
         </div>
-        <div>
-          <label className="mb-1 block text-xs font-semibold tracking-[0.08em] text-slate-600 uppercase">
-            Excuse Date
-          </label>
-          <input
-            required
-            type="date"
-            value={excuseDate}
-            onChange={(event) => setExcuseDate(event.target.value)}
-            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-[#1F2937] outline-none transition focus:border-[#2CA6A4] focus:bg-white"
-          />
-        </div>
+        <ThemedDateInput
+          required
+          label="Excuse Date"
+          value={excuseDate}
+          onChange={setExcuseDate}
+          placeholder="Pick excuse date"
+        />
 
         {error ? <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p> : null}
         {success ? (

@@ -3,6 +3,7 @@
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { useCan } from "@/components/admin/admin-session-provider";
 import { EmptyState } from "@/components/admin/empty-state";
+import { ThemedDateInput } from "@/components/ui/themed-date-input";
 import { excuseStatusClasses } from "@/lib/status-styles";
 import { getOptimizedSupabaseImageUrl } from "@/lib/supabase-image";
 import { formatAppDate, formatAppTime, formatChoirPost, formatDisplayName, formatInitials } from "@/lib/utils";
@@ -262,12 +263,7 @@ export function AttendanceAdmin() {
 
       <section className="rounded-[28px] border border-[#9FD6D5]/70 bg-white p-4 shadow-[0_14px_30px_rgba(31,41,55,0.07)]">
         <div className="grid gap-3 md:grid-cols-[180px_1fr_auto]">
-          <input
-            type="date"
-            value={selectedDate}
-            onChange={(event) => setSelectedDate(event.target.value)}
-            className="rounded-2xl border border-[#9FD6D5] bg-[#F8FAFA] px-4 py-3 text-sm outline-none"
-          />
+          <ThemedDateInput value={selectedDate} onChange={setSelectedDate} placeholder="Select attendance date" />
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
