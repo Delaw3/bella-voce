@@ -66,7 +66,7 @@ export async function PATCH(request: Request) {
     const actorId = new mongoose.Types.ObjectId(user._id.toString());
     const requestedTypes = Array.isArray(payload.types)
       ? payload.types.filter((type): type is NotificationType => NOTIFICATION_TYPES.includes(type))
-      : ["INFO"];
+      : [...NOTIFICATION_TYPES];
 
     await Notification.updateMany(
       { userId: actorId, isRead: false, type: { $in: requestedTypes } } as never,

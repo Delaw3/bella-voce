@@ -8,7 +8,7 @@ import {
 import { requireAnyPermission, requirePermission } from "@/lib/access-control";
 import { invalidateAdminSummaryCaches, invalidateUserPaymentCaches } from "@/lib/cache-invalidation";
 import { connectToDatabase } from "@/lib/mongodb";
-import { notifyUser } from "@/lib/push-notifications";
+import { notifyManyUsers, notifyUser } from "@/lib/push-notifications";
 import AccountabilityAdjustment from "@/models/accountability-adjustment.model";
 import UserFinance from "@/models/user-finance.model";
 import User from "@/models/user.model";
@@ -17,6 +17,7 @@ import { NextResponse } from "next/server";
 
 type Payload = {
   userId?: string;
+  userIds?: string[];
   itemId?: string;
   type?: "PLEDGED" | "FINE" | "LEVY";
   amount?: number;
@@ -232,12 +233,9 @@ export async function POST(request: Request) {
   }
 
   const userId = payload.userId?.trim() ?? "";
+  const userIds = Array.isArray(payload.userIds) ? payload.userIds.map((item) => item.trim()).filter(Boolean) : [];
   const amount = toAmount(payload.amount);
   const reason = payload.reason?.trim() ?? "";
-
-  if (!mongoose.isValidObjectId(userId)) {
-    return NextResponse.json({ message: "Invalid user id." }, { status: 400 });
-  }
 
   if (!payload.type || !["PLEDGED", "FINE", "LEVY"].includes(payload.type)) {
     return NextResponse.json({ message: "Select a valid accountability item type." }, { status: 400 });
@@ -253,6 +251,75 @@ export async function POST(request: Request) {
 
   try {
     await connectToDatabase();
+
+    if (userIds.length > 0) {
+      if (payload.type !== "LEVY") {
+        return NextResponse.json({ message: "Bulk accountability updates currently support levy only." }, { status: 400 });
+      }
+
+      const validUserIds = userIds.filter((item) => mongoose.isValidObjectId(item));
+
+      if (validUserIds.length === 0) {
+        return NextResponse.json({ message: "Select at least one valid user." }, { status: 400 });
+      }
+
+      const users = await User.find({
+        _id: { $in: validUserIds.map((item) => new mongoose.Types.ObjectId(item)) },
+        status: { $ne: "DELETED" },
+      } as never)
+        .select("_id")
+        .lean();
+
+      if (users.length === 0) {
+        return NextResponse.json({ message: "No eligible users were found for this levy." }, { status: 400 });
+      }
+
+      const actorId = new mongoose.Types.ObjectId(permission.user._id.toString());
+      const targetUserIds = users.map((user) => user._id.toString());
+
+      await Promise.all(targetUserIds.map((targetUserId) => ensureUserAdjustments(targetUserId)));
+
+      const createdItems = await AccountabilityAdjustment.insertMany(
+        targetUserIds.map((targetUserId) => ({
+          userId: new mongoose.Types.ObjectId(targetUserId),
+          type: "LEVY" as const,
+          amount,
+          reason,
+          createdBy: actorId,
+          updatedBy: actorId,
+        })),
+      );
+
+      await Promise.all([
+        ...targetUserIds.map((targetUserId) => syncUserAdjustmentTotals(targetUserId)),
+        ...targetUserIds.map((targetUserId) => invalidateUserPaymentCaches(targetUserId)),
+        invalidateAdminSummaryCaches(),
+      ]);
+
+      await notifyManyUsers(
+        targetUserIds.map((targetUserId, index) => ({
+          userId: targetUserId,
+          title: "LEVY added",
+          message: `LEVY of N${amount.toLocaleString()} was added for ${reason}.`,
+          type: "ALERT" as const,
+          route: "/dashboard/pay",
+          dedupeKey: `accountability-bulk-levy:${createdItems[index]?._id?.toString() ?? targetUserId}`,
+        })),
+      );
+
+      return NextResponse.json(
+        {
+          message: `Levy added successfully for ${targetUserIds.length} user${targetUserIds.length === 1 ? "" : "s"}.`,
+          createdCount: targetUserIds.length,
+        },
+        { status: 201 },
+      );
+    }
+
+    if (!mongoose.isValidObjectId(userId)) {
+      return NextResponse.json({ message: "Invalid user id." }, { status: 400 });
+    }
+
     const objectUserId = new mongoose.Types.ObjectId(userId);
 
     await ensureUserAdjustments(objectUserId);
