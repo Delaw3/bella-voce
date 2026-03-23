@@ -12,6 +12,13 @@ type ComplaintUpdatePayload = {
   adminNote?: string;
 };
 
+type PopulatedComplaintUser = {
+  _id?: { toString(): string };
+  firstName?: string;
+  lastName?: string;
+  profilePicture?: string;
+} | null;
+
 export async function GET(_: Request, context: { params: Promise<{ id: string }> }) {
   const permission = await requirePermission("complaints.view");
 
@@ -101,10 +108,8 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
 
     await invalidateAdminDashboardCache();
 
-    const complaintUserId =
-      complaint.userId && typeof complaint.userId === "object" && "_id" in complaint.userId
-        ? complaint.userId._id.toString()
-        : "";
+    const complaintUser = complaint.userId as PopulatedComplaintUser;
+    const complaintUserId = complaintUser?._id?.toString() ?? "";
 
     if (complaintUserId) {
       const statusText = complaint.status.toLowerCase();
