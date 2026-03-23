@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "node server.mjs",
+    "dev": "next dev",
     "build": "next build",
-    "start": "node server.mjs",
+    "start": "next start",
     "lint": "eslint",
     "setup:web-push": "node scripts/setup-web-push.js"
   },
@@ -20,8 +20,6 @@
     "nodemailer": "^8.0.2",
     "react": "19.2.3",
     "react-dom": "19.2.3",
-    "socket.io": "^4.8.3",
-    "socket.io-client": "^4.8.3",
     "web-push": "^3.6.7"
   },
   "devDependencies": {

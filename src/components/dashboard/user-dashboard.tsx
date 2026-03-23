@@ -18,8 +18,8 @@ import { GreetingCard } from "@/components/dashboard/greeting-card";
 import { MembersPanel } from "@/components/dashboard/members-panel";
 import { MonthlyDuesPanel } from "@/components/dashboard/monthly-dues-panel";
 import { NotificationsPanel } from "@/components/dashboard/notifications-panel";
+import { NotificationPollingBridge } from "@/components/notification-polling-bridge";
 import { ProfilePanel } from "@/components/dashboard/profile-panel";
-import { RealtimeNotificationBridge } from "@/components/realtime-notification-bridge";
 import { TotalOwedCard } from "@/components/dashboard/total-owed-card";
 import { ActionModal } from "@/components/ui/action-modal";
 import {
@@ -31,7 +31,6 @@ import {
   NotificationItem,
   ProfileInfo,
 } from "@/types/dashboard";
-import { RealtimeNotificationPayload } from "@/types/realtime";
 import { usePathname, useRouter } from "next/navigation";
 import { TouchEvent, useEffect, useMemo, useRef, useState } from "react";
 
@@ -130,7 +129,7 @@ export function UserDashboard({ firstName, role }: UserDashboardProps) {
   const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false);
   const [isPullRefreshing, setIsPullRefreshing] = useState(false);
   const [pullDistance, setPullDistance] = useState(0);
-  const [liveNotification, setLiveNotification] = useState<RealtimeNotificationPayload | null>(null);
+  const [liveNotification, setLiveNotification] = useState<NotificationItem | null>(null);
   const [pushPermission, setPushPermission] = useState<NotificationPermission | "unsupported">(() => {
     if (typeof window === "undefined" || !("Notification" in window) || !("serviceWorker" in navigator) || !("PushManager" in window)) {
       return "unsupported";
@@ -534,38 +533,26 @@ export function UserDashboard({ firstName, role }: UserDashboardProps) {
   const showPullRefresh = pullDistance > 0 || isPullRefreshing;
   const showDashboardPushPrompt = isPushSupported && pushPermission === "default" && !isPushPromptDismissed;
 
-  function mergeNotifications(current: NotificationItem[], incoming: RealtimeNotificationPayload) {
-    const existingIndex = current.findIndex((item) => item.id === incoming.id);
+  function handleNotificationSync(payload: {
+    notifications: NotificationItem[];
+    unreadCount: number;
+    newNotifications: NotificationItem[];
+  }) {
+    setNotifications(payload.notifications);
+    setSummary((current) => ({
+      ...current,
+      notifications: payload.notifications.slice(0, 5),
+      unreadNotificationCount: payload.unreadCount,
+    }));
 
-    if (existingIndex >= 0) {
-      const next = [...current];
-      next[existingIndex] = incoming;
-      return next.sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime());
+    const latestUnreadAlert =
+      payload.notifications.find((item) => item.type === "ALERT" && !item.isRead) ?? null;
+
+    setActiveAlert(latestUnreadAlert);
+
+    if (payload.newNotifications.length > 0) {
+      setLiveNotification(payload.newNotifications[payload.newNotifications.length - 1] ?? null);
     }
-
-    return [incoming, ...current].sort(
-      (left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime(),
-    );
-  }
-
-  function applyRealtimeNotification(incoming: RealtimeNotificationPayload) {
-    setNotifications((current) => mergeNotifications(current, incoming));
-    setSummary((current) => {
-      const alreadyExists = current.notifications.some((item) => item.id === incoming.id);
-      const unreadIncrement = alreadyExists || incoming.isRead ? 0 : 1;
-
-      return {
-        ...current,
-        notifications: mergeNotifications(current.notifications, incoming).slice(0, 5),
-        unreadNotificationCount: current.unreadNotificationCount + unreadIncrement,
-      };
-    });
-
-    if (incoming.type === "ALERT" && !activeAlert) {
-      setActiveAlert(incoming);
-    }
-
-    setLiveNotification(incoming);
   }
 
   return (
@@ -603,7 +590,11 @@ export function UserDashboard({ firstName, role }: UserDashboardProps) {
       </div>
 
       <section className="mx-auto w-full max-w-md space-y-4 sm:max-w-4xl">
-        <RealtimeNotificationBridge enabled onNotification={applyRealtimeNotification} />
+        <NotificationPollingBridge
+          enabled
+          seedNotifications={notifications}
+          onSync={handleNotificationSync}
+        />
 
         <div className="sticky top-3 z-30">
           <DashboardHeader

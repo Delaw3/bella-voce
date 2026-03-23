@@ -1,6 +1,7 @@
 "use client";
 
 import { ActionModal } from "@/components/ui/action-modal";
+import { lockBodyScroll } from "@/lib/body-scroll-lock";
 import { formatNaira } from "@/lib/naira";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
@@ -42,12 +43,7 @@ export function GreetingCard({ totalOwed, onOpenOwed, onOpenPay, canAccessAdmin 
   useEffect(() => {
     if (!isPasswordModalOpen && !isOpeningAdmin) return;
 
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-    };
+    return lockBodyScroll();
   }, [isPasswordModalOpen, isOpeningAdmin]);
 
   async function confirmAdminAccess(event: FormEvent<HTMLFormElement>) {

@@ -1,12 +1,10 @@
 import { invalidateAdminDashboardCache, invalidateAdminNotificationsCache, invalidateUserNotificationsCache } from "@/lib/cache-invalidation";
 import { getRedisClient } from "@/lib/redis";
 import { requireServerPushConfig } from "@/lib/push-config";
-import { emitNotificationToUser } from "@/lib/realtime-server.mjs";
 import Notification, { NotificationType } from "@/models/notification.model";
 import PushSubscriptionModel from "@/models/push-subscription.model";
 import mongoose from "mongoose";
 import webpush from "web-push";
-import { RealtimeNotificationPayload } from "@/types/realtime";
 
 type UserIdLike = string | mongoose.Types.ObjectId;
 
@@ -55,29 +53,6 @@ function toPushPayload(input: NotificationDeliveryInput): PushPayload {
     icon: "/icons/icon-192x192.png",
     badge: "/icons/icon-192x192.png",
     tag: input.dedupeKey?.trim() || undefined,
-  };
-}
-
-function toRealtimePayload(created: {
-  _id: { toString(): string };
-  title: string;
-  message: string;
-  type: NotificationType;
-  isRead: boolean;
-  createdAt: Date;
-  route?: string;
-}): RealtimeNotificationPayload {
-  return {
-    id: created._id.toString(),
-    title: created.title,
-    message: created.message,
-    type: created.type,
-    isRead: created.isRead,
-    createdAt: created.createdAt.toISOString(),
-    route: created.route ?? "",
-    metadata: {
-      source: "notification-service",
-    },
   };
 }
 
@@ -221,7 +196,6 @@ export async function createNotificationRecord(input: NotificationDeliveryInput)
 
 export async function notifyUser(input: NotificationDeliveryInput) {
   const created = await createNotificationRecord(input);
-  emitNotificationToUser(input.userId.toString(), toRealtimePayload(created));
 
   if (input.skipPush) {
     return created;
@@ -259,10 +233,6 @@ export async function notifyManyUsers(inputs: NotificationDeliveryInput[]) {
     invalidateAdminDashboardCache(),
     ...userIds.map((userId) => invalidateUserNotificationsCache(userId)),
   ]);
-
-  created.forEach((item) => {
-    emitNotificationToUser(item.userId.toString(), toRealtimePayload(item));
-  });
 
   await Promise.allSettled(
     inputs.map(async (input) => {
