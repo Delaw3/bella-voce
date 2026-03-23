@@ -9,6 +9,7 @@ type DashboardMorePanelProps = {
   onOpenComplaint: () => void;
   onOpenExcos?: () => void;
   onOpenSongSelections: () => void;
+  onOpenPsalmist: () => void;
   onOpenAttendanceHistory: () => void;
   onOpenPay?: () => void;
   onOpenPaymentHistory?: () => void;
@@ -30,6 +31,7 @@ export function DashboardMorePanel({
   onOpenComplaint,
   onOpenExcos,
   onOpenSongSelections,
+  onOpenPsalmist,
   onOpenAttendanceHistory,
   onOpenPay,
   onOpenPaymentHistory,
@@ -115,6 +117,19 @@ export function DashboardMorePanel({
         <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
           <path d="M15 17h5l-1.4-1.4a2 2 0 0 1-.6-1.4V11a6 6 0 1 0-12 0v3.2a2 2 0 0 1-.6 1.4L4 17h5" />
           <path d="M9.5 17a2.5 2.5 0 0 0 5 0" />
+        </svg>
+      ),
+    },
+    {
+      key: "psalmist",
+      label: "Psalmist",
+      description: "View the monthly psalmist schedule and selected members.",
+      onClick: onOpenPsalmist,
+      icon: (
+        <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
+          <path d="M9 18V5l10-2v12" />
+          <circle cx="7" cy="18" r="3" />
+          <path d="M19 9h2M19 13h2" />
         </svg>
       ),
     },

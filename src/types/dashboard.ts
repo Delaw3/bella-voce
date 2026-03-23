@@ -174,3 +174,19 @@ export type SongSelectionDetail = {
   selectionDate: string;
   songs: SongSelectionDetailItem[];
 };
+
+export type PsalmistScheduleItem = {
+  id: string;
+  assignmentDate: string;
+  monthKey: string;
+  year: number;
+  month: number;
+  user: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    displayName: string;
+    voicePart?: string;
+    profilePicture?: string;
+  } | null;
+};

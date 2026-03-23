@@ -1,8 +1,7 @@
 "use client";
 
-import { getOptimizedSupabaseImageUrl } from "@/lib/supabase-image";
-import Image from "next/image";
-import { capitalizeWords } from "@/lib/utils";
+import { ProfileAvatar } from "@/components/ui/profile-avatar";
+import { capitalizeWords, formatInitials } from "@/lib/utils";
 import { useEffect, useRef, useState } from "react";
 
 type DashboardHeaderProps = {
@@ -77,28 +76,14 @@ export function DashboardHeader({
             aria-label="Open profile details"
             className="rounded-full transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2CA6A4]/50"
           >
-            {profilePicture ? (
-              <Image
-                src={getOptimizedSupabaseImageUrl(profilePicture, { width: 80, height: 80, quality: 70, resize: "cover" })}
-                alt={`${displayName} profile`}
-                width={40}
-                height={40}
-                className="h-10 w-10 rounded-full object-cover"
-              />
-            ) : (
-              <div className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-slate-100 text-slate-500">
-                <svg
-                  viewBox="0 0 24 24"
-                  className="h-5 w-5"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                >
-                  <circle cx="12" cy="8" r="4" />
-                  <path d="M4 20c1.8-3.2 4.6-5 8-5s6.2 1.8 8 5" />
-                </svg>
-              </div>
-            )}
+            <ProfileAvatar
+              src={profilePicture}
+              alt={`${displayName} profile`}
+              initials={formatInitials(displayName)}
+              size={40}
+              className="h-10 w-10 border border-white/30"
+              fallbackClassName="border-white/30 bg-white/15 text-white"
+            />
           </button>
           <div>
             <p className="font-display text-xl text-white">{displayName}</p>

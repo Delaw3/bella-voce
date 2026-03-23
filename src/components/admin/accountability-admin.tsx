@@ -4,13 +4,12 @@ import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { useCan } from "@/components/admin/admin-session-provider";
 import { EmptyState } from "@/components/admin/empty-state";
 import { ActionModal } from "@/components/ui/action-modal";
-import { getOptimizedSupabaseImageUrl } from "@/lib/supabase-image";
-import { formatAppDateTime, formatDisplayName } from "@/lib/utils";
+import { ProfileAvatar } from "@/components/ui/profile-avatar";
+import { formatAppDateTime, formatDisplayName, formatInitials } from "@/lib/utils";
 import {
   AdminAccountabilityAdjustmentItem,
   AdminAccountabilityItem,
 } from "@/types/admin";
-import Image from "next/image";
 import { useEffect, useState } from "react";
 
 type AccountabilityResponse = { items?: AdminAccountabilityItem[]; message?: string };
@@ -226,20 +225,14 @@ export function AccountabilityAdmin() {
           >
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
-                {item.profilePicture ? (
-                  <Image
-                    src={getOptimizedSupabaseImageUrl(item.profilePicture, { width: 88, height: 88, quality: 70, resize: "cover" })}
-                    alt={formatDisplayName(item.firstName, item.lastName)}
-                    width={44}
-                    height={44}
-                    className="h-11 w-11 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#EAF9F8] text-sm font-semibold text-[#1E8C8A]">
-                    {item.firstName.slice(0, 1)}
-                    {item.lastName.slice(0, 1)}
-                  </div>
-                )}
+                <ProfileAvatar
+                  src={item.profilePicture}
+                  alt={formatDisplayName(item.firstName, item.lastName)}
+                  initials={formatInitials(item.firstName, item.lastName)}
+                  size={44}
+                  className="h-11 w-11 border border-[#9FD6D5]/70"
+                  fallbackClassName="border-[#9FD6D5]/70 bg-[#EAF9F8] text-[#1E8C8A]"
+                />
                 <div>
                   <h2 className="text-lg font-semibold text-[#1F2937]">
                     {formatDisplayName(item.firstName, item.lastName)}

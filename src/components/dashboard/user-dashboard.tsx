@@ -32,7 +32,7 @@ import {
   ProfileInfo,
 } from "@/types/dashboard";
 import { RealtimeNotificationPayload } from "@/types/realtime";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { TouchEvent, useEffect, useMemo, useRef, useState } from "react";
 
 type UserDashboardProps = {
@@ -108,6 +108,7 @@ type ActiveSheet =
 
 export function UserDashboard({ firstName, role }: UserDashboardProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const pullStartYRef = useRef<number | null>(null);
   const isPullTrackingRef = useRef(false);
   const [summary, setSummary] = useState<DashboardSummaryResponse>(defaultSummary);
@@ -124,6 +125,7 @@ export function UserDashboard({ firstName, role }: UserDashboardProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [isActionLoading, setIsActionLoading] = useState(false);
   const [actionLoadingText, setActionLoadingText] = useState("Opening...");
+  const [pendingRoute, setPendingRoute] = useState<string | null>(null);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false);
   const [isPullRefreshing, setIsPullRefreshing] = useState(false);
@@ -249,6 +251,15 @@ export function UserDashboard({ firstName, role }: UserDashboardProps) {
   }, [liveNotification]);
 
   useEffect(() => {
+    if (!pendingRoute || pathname !== pendingRoute) {
+      return;
+    }
+
+    setPendingRoute(null);
+    setIsActionLoading(false);
+  }, [pathname, pendingRoute]);
+
+  useEffect(() => {
     if (typeof window === "undefined") return;
 
     const storedValue = window.localStorage.getItem(QUICK_ACCESS_STORAGE_KEY);
@@ -351,17 +362,25 @@ export function UserDashboard({ firstName, role }: UserDashboardProps) {
   async function logout() {
     setIsLoggingOut(true);
     await fetch("/api/auth/logout", { method: "POST" });
+    setPendingRoute("/login");
     router.push("/login");
     router.refresh();
   }
 
-  async function runWithLoader(action: () => void | Promise<void>, loadingText = "Opening...") {
+  async function runWithLoader(
+    action: () => void | Promise<void>,
+    loadingText = "Opening...",
+    options?: { routeTarget?: string },
+  ) {
     setActionLoadingText(loadingText);
     setIsActionLoading(true);
+    setPendingRoute(options?.routeTarget ?? null);
     try {
       await action();
     } finally {
-      setTimeout(() => setIsActionLoading(false), 180);
+      if (!options?.routeTarget) {
+        setTimeout(() => setIsActionLoading(false), 180);
+      }
     }
   }
 
@@ -369,37 +388,43 @@ export function UserDashboard({ firstName, role }: UserDashboardProps) {
     if (feature === "choir-finance") {
       void runWithLoader(async () => {
         router.push("/dashboard/choir-finance");
-      }, "Opening Choir Finance...");
+      }, "Opening Choir Finance...", { routeTarget: "/dashboard/choir-finance" });
       return;
     }
     if (feature === "complaint") {
       void runWithLoader(async () => {
         router.push("/dashboard/complaint");
-      }, "Opening Complaint...");
+      }, "Opening Complaint...", { routeTarget: "/dashboard/complaint" });
       return;
     }
     if (feature === "pay") {
       void runWithLoader(async () => {
         router.push("/dashboard/pay");
-      }, "Opening Payment...");
+      }, "Opening Payment...", { routeTarget: "/dashboard/pay" });
       return;
     }
     if (feature === "payment-history") {
       void runWithLoader(async () => {
         router.push("/dashboard/pay/history");
-      }, "Opening Payment History...");
+      }, "Opening Payment History...", { routeTarget: "/dashboard/pay/history" });
       return;
     }
     if (feature === "song-selections") {
       void runWithLoader(async () => {
         router.push("/dashboard/song-selections");
-      }, "Opening Song Selections...");
+      }, "Opening Song Selections...", { routeTarget: "/dashboard/song-selections" });
+      return;
+    }
+    if (feature === "psalmist") {
+      void runWithLoader(async () => {
+        router.push("/dashboard/psalmist");
+      }, "Opening Psalmist...", { routeTarget: "/dashboard/psalmist" });
       return;
     }
     if (feature === "attendance-history") {
       void runWithLoader(async () => {
         router.push("/dashboard/attendance-history");
-      }, "Opening Attendance History...");
+      }, "Opening Attendance History...", { routeTarget: "/dashboard/attendance-history" });
       return;
     }
     void runWithLoader(async () => {
@@ -703,7 +728,7 @@ export function UserDashboard({ firstName, role }: UserDashboardProps) {
             onOpenPay={() =>
               void runWithLoader(async () => {
                 router.push("/dashboard/pay");
-              }, "Opening Payment...")
+              }, "Opening Payment...", { routeTarget: "/dashboard/pay" })
             }
           />
 
@@ -835,13 +860,13 @@ export function UserDashboard({ firstName, role }: UserDashboardProps) {
             setActiveSheet(null);
             void runWithLoader(async () => {
               router.push("/dashboard/pay");
-            }, "Opening Payment...");
+            }, "Opening Payment...", { routeTarget: "/dashboard/pay" });
           }}
           onOpenPaymentHistory={() => {
             setActiveSheet(null);
             void runWithLoader(async () => {
               router.push("/dashboard/pay/history");
-            }, "Opening Payment History...");
+            }, "Opening Payment History...", { routeTarget: "/dashboard/pay/history" });
           }}
           onOpenExcos={() => {
             setActiveSheet(null);
@@ -859,19 +884,25 @@ export function UserDashboard({ firstName, role }: UserDashboardProps) {
             setActiveSheet(null);
             void runWithLoader(async () => {
               router.push("/dashboard/complaint");
-            }, "Opening Complaint...");
+            }, "Opening Complaint...", { routeTarget: "/dashboard/complaint" });
           }}
           onOpenSongSelections={() => {
             setActiveSheet(null);
             void runWithLoader(async () => {
               router.push("/dashboard/song-selections");
-            }, "Opening Song Selections...");
+            }, "Opening Song Selections...", { routeTarget: "/dashboard/song-selections" });
+          }}
+          onOpenPsalmist={() => {
+            setActiveSheet(null);
+            void runWithLoader(async () => {
+              router.push("/dashboard/psalmist");
+            }, "Opening Psalmist...", { routeTarget: "/dashboard/psalmist" });
           }}
           onOpenAttendanceHistory={() => {
             setActiveSheet(null);
             void runWithLoader(async () => {
               router.push("/dashboard/attendance-history");
-            }, "Opening Attendance History...");
+            }, "Opening Attendance History...", { routeTarget: "/dashboard/attendance-history" });
           }}
         />
       </DashboardSheet>
@@ -955,7 +986,7 @@ export function UserDashboard({ firstName, role }: UserDashboardProps) {
           if (tab === "choir-finance") {
             void runWithLoader(async () => {
               router.push("/dashboard/choir-finance");
-            }, "Opening Choir Finance...");
+            }, "Opening Choir Finance...", { routeTarget: "/dashboard/choir-finance" });
           }
         }}
       />

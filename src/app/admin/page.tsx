@@ -18,6 +18,7 @@ const adminCards = [
   { href: "/admin/excuses", label: "Excuses", icon: "excuses" as AdminIconName, description: "Review submitted excuses and respond with status updates." },
   { href: "/admin/choir-finance", label: "Choir Finance", icon: "finance" as AdminIconName, description: "Track income, expenses, and current balance." },
   { href: "/admin/song-selections", label: "Song Selections", icon: "song-selections" as AdminIconName, description: "Create and edit song lists for rehearsals and services." },
+  { href: "/admin/psalmist", label: "Psalmist", icon: "psalmist" as AdminIconName, description: "Assign members as psalmist for specific service dates." },
   { href: "/admin/notifications", label: "Notifications", icon: "notifications" as AdminIconName, description: "Send announcements to one user, a role, or everyone." },
   { href: "/admin/complaints", label: "Complaints", icon: "complaints" as AdminIconName, description: "Review submitted complaints and resolve them properly." },
   { href: "/admin/roles", label: "Roles / Access", icon: "roles" as AdminIconName, description: "Super admin only. Promote, demote, and govern access." },
@@ -93,6 +94,8 @@ export default async function AdminHomePage() {
                                         ? hasPermissionValue(user.role, permissions, "choir_finance.view")
                                         : card.href === "/admin/song-selections"
                                           ? hasPermissionValue(user.role, permissions, "song_selections.view")
+                                          : card.href === "/admin/psalmist"
+                                            ? hasPermissionValue(user.role, permissions, "psalmist.view")
                                           : card.href === "/admin/notifications"
                                             ? hasPermissionValue(user.role, permissions, "notifications.view")
                                             : card.href === "/admin/complaints"

@@ -1,10 +1,9 @@
 "use client";
 
+import { ProfileAvatar } from "@/components/ui/profile-avatar";
 import { ProfileInfo } from "@/types/dashboard";
 import { ProfileImageViewer } from "@/components/dashboard/profile-image-viewer";
-import { getOptimizedSupabaseImageUrl } from "@/lib/supabase-image";
-import { capitalizeWords } from "@/lib/utils";
-import Image from "next/image";
+import { capitalizeWords, formatInitials } from "@/lib/utils";
 import { useState } from "react";
 
 type ProfilePanelProps = {
@@ -35,26 +34,25 @@ export function ProfilePanel({ profile }: ProfilePanelProps) {
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50 px-3 py-3">
-        {profile.profilePicture ? (
-          <button
-            type="button"
-            onClick={() => setIsImageViewerOpen(true)}
-            aria-label="View profile picture"
-            className="rounded-full transition hover:opacity-90"
-          >
-            <Image
-              src={getOptimizedSupabaseImageUrl(profile.profilePicture, { width: 96, height: 96, quality: 70, resize: "cover" })}
-              alt={`${normalizedFirstName} profile`}
-              width={48}
-              height={48}
-              className="h-12 w-12 rounded-full object-cover"
-            />
-          </button>
-        ) : (
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#EAF9F8] text-lg font-semibold text-[#1E8C8A]">
-            {normalizedFirstName?.slice(0, 1).toUpperCase() || "B"}
-          </div>
-        )}
+        <button
+          type="button"
+          onClick={() => {
+            if (profile.profilePicture) {
+              setIsImageViewerOpen(true);
+            }
+          }}
+          aria-label="View profile picture"
+          className="rounded-full transition hover:opacity-90"
+        >
+          <ProfileAvatar
+            src={profile.profilePicture}
+            alt={`${normalizedFirstName} profile`}
+            initials={formatInitials(normalizedFirstName, normalizedLastName)}
+            size={48}
+            className="h-12 w-12 border border-[#9FD6D5]/70"
+            fallbackClassName="border-[#9FD6D5]/70 bg-[#EAF9F8] text-[#1E8C8A]"
+          />
+        </button>
         <div>
           <p className="text-base font-semibold text-[#1F2937]">
             {normalizedFirstName} {normalizedLastName}

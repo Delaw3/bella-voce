@@ -90,6 +90,24 @@ export type AdminSongSelectionItem = {
   updatedAt: string;
 };
 
+export type AdminPsalmistItem = {
+  id: string;
+  assignmentDate: string;
+  monthKey: string;
+  year: number;
+  month: number;
+  createdAt: string;
+  updatedAt: string;
+  user: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    displayName: string;
+    voicePart?: string;
+    profilePicture?: string;
+  } | null;
+};
+
 export type AdminComplaintItem = {
   id: string;
   subject: string;

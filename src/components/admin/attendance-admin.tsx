@@ -3,11 +3,10 @@
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { useCan } from "@/components/admin/admin-session-provider";
 import { EmptyState } from "@/components/admin/empty-state";
+import { ProfileAvatar } from "@/components/ui/profile-avatar";
 import { ThemedDateInput } from "@/components/ui/themed-date-input";
 import { excuseStatusClasses } from "@/lib/status-styles";
-import { getOptimizedSupabaseImageUrl } from "@/lib/supabase-image";
 import { formatAppDate, formatAppTime, formatChoirPost, formatDisplayName, formatInitials } from "@/lib/utils";
-import Image from "next/image";
 import { useEffect, useState } from "react";
 
 type AttendanceStatus = "PRESENT" | "LATE" | "ABSENT" | "EXCUSED";
@@ -300,19 +299,14 @@ export function AttendanceAdmin() {
               <div className="flex flex-col gap-4">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div className="flex items-center gap-3">
-                    {item.profilePicture ? (
-                      <Image
-                        src={getOptimizedSupabaseImageUrl(item.profilePicture, { width: 96, height: 96, quality: 70, resize: "cover" })}
-                        alt={displayName}
-                        width={48}
-                        height={48}
-                        className="h-12 w-12 rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#EAF9F8] text-sm font-semibold text-[#1E8C8A]">
-                        {formatInitials(item.firstName, item.lastName)}
-                      </div>
-                    )}
+                    <ProfileAvatar
+                      src={item.profilePicture}
+                      alt={displayName}
+                      initials={formatInitials(item.firstName, item.lastName)}
+                      size={48}
+                      className="h-12 w-12 border border-[#9FD6D5]/70"
+                      fallbackClassName="border-[#9FD6D5]/70 bg-[#EAF9F8] text-[#1E8C8A]"
+                    />
 
                     <div className="min-w-0">
                       <h2 className="text-base font-semibold text-[#1F2937]">{displayName}</h2>

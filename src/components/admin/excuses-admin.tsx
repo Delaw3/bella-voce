@@ -4,6 +4,7 @@ import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { useCan } from "@/components/admin/admin-session-provider";
 import { EmptyState } from "@/components/admin/empty-state";
 import { ActionModal } from "@/components/ui/action-modal";
+import { ProfileAvatar } from "@/components/ui/profile-avatar";
 import { getOptimizedSupabaseImageUrl } from "@/lib/supabase-image";
 import { excuseStatusClasses } from "@/lib/status-styles";
 import { formatAppDate, formatAppTime, formatDisplayName, formatInitials } from "@/lib/utils";
@@ -148,30 +149,27 @@ export function ExcusesAdmin() {
           >
             <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
               <div className="flex items-start gap-3">
-                {item.user?.profilePicture ? (
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setPreviewImage({
-                      src: item.user?.profilePicture ?? "",
-                        alt: formatDisplayName(item.user?.firstName, item.user?.lastName),
-                      })
-                    }
-                    className="shrink-0"
-                  >
-                    <Image
-                      src={getOptimizedSupabaseImageUrl(item.user.profilePicture, { width: 88, height: 88, quality: 70, resize: "cover" })}
-                      alt={formatDisplayName(item.user.firstName, item.user.lastName)}
-                      width={44}
-                      height={44}
-                      className="h-11 w-11 rounded-full object-cover transition hover:scale-[1.03]"
-                    />
-                  </button>
-                ) : (
-                  <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#EAF9F8] text-sm font-semibold text-[#1E8C8A]">
-                    {item.user ? formatInitials(item.user.firstName, item.user.lastName) : "U"}
-                  </div>
-                )}
+                <button
+                  type="button"
+                  onClick={() =>
+                    item.user?.profilePicture
+                      ? setPreviewImage({
+                          src: item.user.profilePicture,
+                          alt: formatDisplayName(item.user.firstName, item.user.lastName),
+                        })
+                      : undefined
+                  }
+                  className="shrink-0"
+                >
+                  <ProfileAvatar
+                    src={item.user?.profilePicture}
+                    alt={item.user ? formatDisplayName(item.user.firstName, item.user.lastName) : "Unknown member"}
+                    initials={item.user ? formatInitials(item.user.firstName, item.user.lastName) : "U"}
+                    size={44}
+                    className="h-11 w-11 border border-[#9FD6D5]/70"
+                    fallbackClassName="border-[#9FD6D5]/70 bg-[#EAF9F8] text-[#1E8C8A]"
+                  />
+                </button>
                 <div className="min-w-0">
                   <p className="text-sm text-slate-600">
                     {item.user ? formatDisplayName(item.user.firstName, item.user.lastName) : "Unknown member"}

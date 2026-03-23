@@ -1,6 +1,6 @@
 "use client";
 
-import { closeRealtimeSocket, getRealtimeSocket } from "@/lib/realtime-client";
+import { NotificationItem } from "@/types/dashboard";
 import { RealtimeNotificationPayload } from "@/types/realtime";
 import { useEffect, useRef } from "react";
 
@@ -18,13 +18,84 @@ export function RealtimeNotificationBridge({ enabled, onNotification }: Realtime
 
   useEffect(() => {
     if (!enabled) {
-      closeRealtimeSocket();
       return;
     }
 
+    let eventSource: EventSource | null = null;
     let isClosed = false;
     let reconnectTimeoutId: number | null = null;
-    let unsubscribe = () => {};
+    let pollIntervalId: number | null = null;
+    let visibilityHandler: (() => void) | null = null;
+    const knownNotificationIds = new Set<string>();
+    let hasSeededFromPolling = false;
+
+    async function syncFromNotificationsApi() {
+      try {
+        const response = await fetch("/api/notifications", {
+          cache: "no-store",
+        });
+
+        if (!response.ok) {
+          return;
+        }
+
+        const payload = (await response.json()) as {
+          notifications?: NotificationItem[];
+        };
+
+        const notifications = payload.notifications ?? [];
+
+        if (!hasSeededFromPolling) {
+          notifications.forEach((item) => {
+            knownNotificationIds.add(item.id);
+          });
+          hasSeededFromPolling = true;
+          return;
+        }
+
+        const newItems = notifications
+          .filter((item) => !knownNotificationIds.has(item.id))
+          .sort((left, right) => new Date(left.createdAt).getTime() - new Date(right.createdAt).getTime());
+
+        newItems.forEach((item) => {
+          knownNotificationIds.add(item.id);
+          notificationHandlerRef.current(item);
+        });
+      } catch {
+        // Polling is only a fallback path when sockets are unavailable.
+      }
+    }
+
+    function stopPolling() {
+      if (pollIntervalId !== null) {
+        window.clearInterval(pollIntervalId);
+        pollIntervalId = null;
+      }
+
+      if (visibilityHandler) {
+        document.removeEventListener("visibilitychange", visibilityHandler);
+        visibilityHandler = null;
+      }
+    }
+
+    function ensurePollingFallback() {
+      if (pollIntervalId !== null || isClosed) {
+        return;
+      }
+
+      void syncFromNotificationsApi();
+      pollIntervalId = window.setInterval(() => {
+        void syncFromNotificationsApi();
+      }, 12000);
+
+      visibilityHandler = () => {
+        if (!document.hidden) {
+          void syncFromNotificationsApi();
+        }
+      };
+
+      document.addEventListener("visibilitychange", visibilityHandler);
+    }
 
     function clearReconnectTimeout() {
       if (reconnectTimeoutId !== null) {
@@ -40,67 +111,55 @@ export function RealtimeNotificationBridge({ enabled, onNotification }: Realtime
 
       reconnectTimeoutId = window.setTimeout(() => {
         reconnectTimeoutId = null;
-        unsubscribe();
-        closeRealtimeSocket();
-        void connect();
+        if (eventSource) {
+          eventSource.close();
+          eventSource = null;
+        }
+        connect();
       }, delay);
     }
 
-    async function connect() {
+    function connect() {
       try {
-        const response = await fetch("/api/realtime/auth", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+        const source = new EventSource("/api/realtime/stream");
+        eventSource = source;
+
+        source.addEventListener("ready", () => {
+          stopPolling();
+          void syncFromNotificationsApi();
         });
 
-        if (!response.ok) {
-          scheduleReconnect();
-          return;
-        }
+        source.addEventListener("notification", (event) => {
+          const payload = JSON.parse((event as MessageEvent<string>).data) as RealtimeNotificationPayload;
+          knownNotificationIds.add(payload.id);
+          notificationHandlerRef.current(payload);
+        });
 
-        const payload = (await response.json()) as { token?: string };
-        if (!payload.token || isClosed) {
-          if (!isClosed) {
-            scheduleReconnect();
+        source.addEventListener("error", () => {
+          if (isClosed) {
+            return;
           }
-          return;
-        }
 
-        const socket = getRealtimeSocket(payload.token);
-        const handleNotification = (event: RealtimeNotificationPayload) => {
-          notificationHandlerRef.current(event);
-        };
-        const handleReconnectNeeded = () => {
+          ensurePollingFallback();
+          source.close();
+          eventSource = null;
           scheduleReconnect();
-        };
-
-        socket.off("notification:new", handleNotification);
-        socket.on("notification:new", handleNotification);
-        socket.off("connect_error", handleReconnectNeeded);
-        socket.on("connect_error", handleReconnectNeeded);
-        socket.off("disconnect", handleReconnectNeeded);
-        socket.on("disconnect", handleReconnectNeeded);
-
-        unsubscribe = () => {
-          socket.off("notification:new", handleNotification);
-          socket.off("connect_error", handleReconnectNeeded);
-          socket.off("disconnect", handleReconnectNeeded);
-        };
+        });
       } catch {
-        // Existing polling/fetch flows remain available if the real-time bridge fails.
+        ensurePollingFallback();
         scheduleReconnect();
       }
     }
 
-    void connect();
+    connect();
 
     return () => {
       isClosed = true;
       clearReconnectTimeout();
-      unsubscribe();
-      closeRealtimeSocket();
+      stopPolling();
+      if (eventSource) {
+        eventSource.close();
+      }
     };
   }, [enabled]);
 

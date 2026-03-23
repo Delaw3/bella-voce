@@ -12,6 +12,14 @@ export async function invalidateUserNotificationsCache(userId: string) {
   ]);
 }
 
+export async function invalidateUserPsalmistCache(userId: string) {
+  await cacheDeleteByPrefix(cachePrefixes.userPsalmist(userId));
+}
+
+export async function invalidatePsalmistMonthCaches() {
+  await cacheDeleteByPrefix(cachePrefixes.psalmist());
+}
+
 export async function invalidateUserProfileCache(userId: string) {
   await cacheDelete(cacheKeys.userProfile(userId));
 }
@@ -57,6 +65,10 @@ export async function invalidateAdminMembersCache() {
 
 export async function invalidateAdminNotificationsCache() {
   await cacheDeleteByPrefix(cachePrefixes.adminNotifications());
+}
+
+export async function invalidateAdminPsalmistCache() {
+  await cacheDeleteByPrefix(cachePrefixes.adminPsalmist());
 }
 
 export async function invalidateAdminPaymentsCache() {

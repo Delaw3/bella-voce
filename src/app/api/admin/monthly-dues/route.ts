@@ -198,8 +198,8 @@ export async function PATCH(request: Request) {
 
       await notifyUser({
         userId,
-        title: "Monthly dues updated",
-        message: "Your monthly dues settings were updated by admin.",
+        title: "Monthly Dues",
+        message: "Monthly dues were updated.",
         type: "INFO",
         route: "/dashboard",
         dedupeKey: `monthly-dues-settings:${userId}:${nextStartYear}:${removedMonths.join(",")}`,
@@ -265,8 +265,8 @@ export async function PATCH(request: Request) {
 
     await notifyUser({
       userId,
-      title: payload.paid ? "Monthly dues confirmed" : "Monthly dues updated",
-      message: `${getMonthLabel(month)} ${year} dues were marked as ${payload.paid ? "paid" : "not paid"}.`,
+      title: "Monthly Dues",
+      message: `${getMonthLabel(month)} ${year} dues were ${payload.paid ? "confirmed as paid" : "updated to not paid"}.`,
       type: payload.paid ? "INFO" : "REMINDER",
       route: "/dashboard",
       dedupeKey: `monthly-dues-status:${userId}:${year}:${month}:${payload.paid ? "paid" : "unpaid"}`,

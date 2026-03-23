@@ -4,6 +4,7 @@ import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { useCan } from "@/components/admin/admin-session-provider";
 import { EmptyState } from "@/components/admin/empty-state";
 import { ActionModal } from "@/components/ui/action-modal";
+import { ProfileAvatar } from "@/components/ui/profile-avatar";
 import { getOptimizedSupabaseImageUrl } from "@/lib/supabase-image";
 import { formatAppDate, formatAppTime, formatDisplayName, formatInitials } from "@/lib/utils";
 import { AdminComplaintItem } from "@/types/admin";
@@ -123,30 +124,27 @@ export function ComplaintsAdmin() {
           return (
           <article key={item.id} className="rounded-[24px] border border-[#9FD6D5]/70 bg-white p-4">
             <div className="flex items-start gap-3">
-              {item.sender?.profilePicture ? (
-                <button
-                  type="button"
-                  onClick={() =>
-                    setPreviewImage({
-                      src: item.sender?.profilePicture ?? "",
-                      alt: formatDisplayName(item.sender?.firstName, item.sender?.lastName),
-                    })
-                  }
-                  className="rounded-full transition hover:opacity-90"
-                >
-                  <Image
-                    src={getOptimizedSupabaseImageUrl(item.sender.profilePicture, { width: 96, height: 96, quality: 70, resize: "cover" })}
-                    alt={formatDisplayName(item.sender.firstName, item.sender.lastName)}
-                    width={48}
-                    height={48}
-                    className="h-12 w-12 rounded-full object-cover ring-2 ring-[#9FD6D5]/70"
-                  />
-                </button>
-              ) : (
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#9FD6D5]/35 text-sm font-semibold text-[#1E8C8A]">
-                  {item.sender ? formatInitials(item.sender.firstName, item.sender.lastName) : "?"}
-                </div>
-              )}
+              <button
+                type="button"
+                onClick={() =>
+                  item.sender?.profilePicture
+                    ? setPreviewImage({
+                        src: item.sender.profilePicture,
+                        alt: formatDisplayName(item.sender.firstName, item.sender.lastName),
+                      })
+                    : undefined
+                }
+                className="rounded-full transition hover:opacity-90"
+              >
+                <ProfileAvatar
+                  src={item.sender?.profilePicture}
+                  alt={item.sender ? formatDisplayName(item.sender.firstName, item.sender.lastName) : "Unknown sender"}
+                  initials={item.sender ? formatInitials(item.sender.firstName, item.sender.lastName) : "?"}
+                  size={48}
+                  className="h-12 w-12 ring-2 ring-[#9FD6D5]/70"
+                  fallbackClassName="bg-[#9FD6D5]/35 text-[#1E8C8A]"
+                />
+              </button>
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-slate-700">
                   {item.sender ? formatDisplayName(item.sender.firstName, item.sender.lastName) : "Unknown sender"}

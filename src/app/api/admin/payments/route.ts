@@ -171,7 +171,7 @@ export async function POST(request: Request) {
     const items: PaymentItemInput[] = [
       {
         category: payload.category,
-        description: description || `${payload.category.replace("_", " ")} payment recorded by admin`,
+        description: description || `${payload.category.replace("_", " ")} payment recorded`,
         amount,
         year: payload.year ? Number(payload.year) : new Date().getFullYear(),
         accountabilityDate: payload.accountabilityDate ? new Date(payload.accountabilityDate) : undefined,
@@ -193,7 +193,7 @@ export async function POST(request: Request) {
     const approved = await approvePaymentTransaction({
       transactionId: transaction.id,
       approvedBy: permission.user._id,
-      adminNote: payload.adminNote || "Recorded and approved by admin.",
+      adminNote: payload.adminNote || "Recorded and approved.",
     });
 
     await Promise.all([

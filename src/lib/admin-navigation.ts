@@ -24,6 +24,7 @@ export const ADMIN_MORE_ITEMS = [
   { href: "/admin/attendance", label: "Attendance", icon: "attendance", permission: "attendance.view" as PermissionKey },
   { href: "/admin/monthly-dues", label: "Monthly Dues", icon: "monthly-dues", permission: "monthly_dues.view" as PermissionKey },
   { href: "/admin/song-selections", label: "Song Selections", icon: "song-selections", permission: "song_selections.view" as PermissionKey },
+  { href: "/admin/psalmist", label: "Psalmist", icon: "psalmist", permission: "psalmist.view" as PermissionKey },
   { href: "/admin/complaints", label: "Complaints", icon: "complaints", permission: "complaints.view" as PermissionKey },
   { href: "/admin/excuses", label: "Excuses", icon: "excuses", permission: "excuses.view" as PermissionKey },
   {

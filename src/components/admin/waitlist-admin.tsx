@@ -4,9 +4,8 @@ import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { useCan } from "@/components/admin/admin-session-provider";
 import { EmptyState } from "@/components/admin/empty-state";
 import { ActionModal } from "@/components/ui/action-modal";
-import { getOptimizedSupabaseImageUrl } from "@/lib/supabase-image";
-import { EMAIL_PATTERN, formatAppDate, formatDisplayName, normalizeEmail } from "@/lib/utils";
-import Image from "next/image";
+import { ProfileAvatar } from "@/components/ui/profile-avatar";
+import { EMAIL_PATTERN, formatAppDate, formatDisplayName, formatInitials, normalizeEmail } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -423,25 +422,14 @@ export function WaitlistAdmin() {
                 {item.registeredUser ? (
                   <div className="mt-4 rounded-[24px] border border-emerald-100 bg-emerald-50/60 p-4">
                     <div className="flex items-start gap-3">
-                      {item.registeredUser.profilePicture ? (
-                        <Image
-                          src={getOptimizedSupabaseImageUrl(item.registeredUser.profilePicture, {
-                            width: 112,
-                            height: 112,
-                            quality: 72,
-                            resize: "cover",
-                          })}
-                          alt={`${item.registeredUser.firstName} ${item.registeredUser.lastName}`}
-                          width={56}
-                          height={56}
-                          className="h-14 w-14 rounded-full object-cover ring-2 ring-white"
-                        />
-                      ) : (
-                        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white text-base font-semibold text-emerald-700">
-                          {item.registeredUser.firstName.charAt(0)}
-                          {item.registeredUser.lastName.charAt(0)}
-                        </div>
-                      )}
+                      <ProfileAvatar
+                        src={item.registeredUser.profilePicture}
+                        alt={`${item.registeredUser.firstName} ${item.registeredUser.lastName}`}
+                        initials={formatInitials(item.registeredUser.firstName, item.registeredUser.lastName)}
+                        size={56}
+                        className="h-14 w-14 ring-2 ring-white"
+                        fallbackClassName="bg-white text-emerald-700"
+                      />
 
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">

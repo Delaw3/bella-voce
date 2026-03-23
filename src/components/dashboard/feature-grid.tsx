@@ -10,6 +10,7 @@ export type DashboardFeatureKey =
   | "attendance-history"
   | "choir-finance"
   | "song-selections"
+  | "psalmist"
   | "complaint";
 
 type FeatureGridProps = {
@@ -95,6 +96,15 @@ function Icon({ type }: { type: DashboardFeatureKey }) {
       </svg>
     );
   }
+  if (type === "psalmist") {
+    return (
+      <svg viewBox="0 0 24 24" className={base} fill="none" stroke="currentColor" strokeWidth="1.8">
+        <path d="M9 18V5l10-2v12" />
+        <circle cx="7" cy="18" r="3" />
+        <path d="M19 9h2M19 13h2" />
+      </svg>
+    );
+  }
   if (type === "complaint") {
     return (
       <svg viewBox="0 0 24 24" className={base} fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -120,6 +130,7 @@ const features: Array<{ key: DashboardFeatureKey; label: string }> = [
   { key: "members", label: "Members" },
   { key: "excos", label: "Excos" },
   { key: "attendance-history", label: "Attendance History" },
+  { key: "psalmist", label: "Psalmist" },
   { key: "complaint", label: "Complaint" },
   { key: "choir-finance", label: "Choir Finance" },
   { key: "song-selections", label: "Song Selections" },

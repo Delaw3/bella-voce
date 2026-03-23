@@ -1,9 +1,8 @@
 "use client";
 
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
-import { getOptimizedSupabaseImageUrl } from "@/lib/supabase-image";
+import { ProfileAvatar } from "@/components/ui/profile-avatar";
 import { formatDisplayName, formatInitials } from "@/lib/utils";
-import Image from "next/image";
 import { useEffect, useState } from "react";
 
 type AnalyticsResponse = {
@@ -116,19 +115,14 @@ export function AnalyticsAdmin() {
                 <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#EAF9F8] text-xs font-semibold text-[#1E8C8A]">
                   {index + 1}
                 </span>
-                {item.profilePicture ? (
-                  <Image
-                    src={getOptimizedSupabaseImageUrl(item.profilePicture, { width: 80, height: 80, quality: 70, resize: "cover" })}
-                    alt={formatDisplayName(item.firstName, item.lastName)}
-                    width={40}
-                    height={40}
-                    className="h-10 w-10 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#EAF9F8] text-xs font-semibold text-[#1E8C8A]">
-                    {formatInitials(item.firstName, item.lastName)}
-                  </div>
-                )}
+                <ProfileAvatar
+                  src={item.profilePicture}
+                  alt={formatDisplayName(item.firstName, item.lastName)}
+                  initials={formatInitials(item.firstName, item.lastName)}
+                  size={40}
+                  className="h-10 w-10 border border-[#9FD6D5]/70"
+                  fallbackClassName="border-[#9FD6D5]/70 bg-[#EAF9F8] text-[#1E8C8A]"
+                />
                 <p className="text-sm font-semibold text-[#1F2937]">{formatDisplayName(item.firstName, item.lastName)}</p>
               </div>
               <p className="text-sm font-semibold text-[#1F2937]">₦ {item.totalOwed.toLocaleString()}</p>

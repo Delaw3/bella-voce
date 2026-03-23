@@ -114,8 +114,8 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
           userId: transaction.user.id,
           title: "Payment rejected",
           message: transaction.adminNote?.trim()
-            ? `Your payment was rejected. Admin note: ${transaction.adminNote}`
-            : "Your payment was rejected by admin.",
+            ? `Your payment was rejected. Note: ${transaction.adminNote}`
+            : "Your payment was rejected.",
           type: "ALERT",
           route: `/dashboard/pay/history/${transaction.id}`,
           dedupeKey: `payment-rejected:${transaction.id}`,

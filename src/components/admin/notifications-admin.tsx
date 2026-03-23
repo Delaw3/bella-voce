@@ -4,9 +4,8 @@ import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { useCan } from "@/components/admin/admin-session-provider";
 import { EmptyState } from "@/components/admin/empty-state";
 import { ActionModal } from "@/components/ui/action-modal";
-import { getOptimizedSupabaseImageUrl } from "@/lib/supabase-image";
-import { formatDisplayName } from "@/lib/utils";
-import Image from "next/image";
+import { ProfileAvatar } from "@/components/ui/profile-avatar";
+import { formatDisplayName, formatInitials } from "@/lib/utils";
 import { AdminMemberItem, AdminNotificationItem } from "@/types/admin";
 import { useEffect, useMemo, useState } from "react";
 
@@ -340,20 +339,14 @@ export function NotificationsAdmin() {
                           : "border-[#9FD6D5]/70 bg-white hover:bg-[#F8FAFA]"
                       }`}
                     >
-                      {member.profilePicture ? (
-                        <Image
-                          src={getOptimizedSupabaseImageUrl(member.profilePicture, { width: 88, height: 88, quality: 70, resize: "cover" })}
-                          alt={formatDisplayName(member.firstName, member.lastName)}
-                          width={56}
-                          height={56}
-                          className="h-14 w-14 rounded-full border border-[#9FD6D5]/70 object-cover"
-                        />
-                      ) : (
-                        <div className="flex h-14 w-14 items-center justify-center rounded-full border border-[#9FD6D5]/70 bg-[#EAF9F8] text-sm font-semibold uppercase text-[#1E8C8A]">
-                          {(member.firstName?.[0] ?? "").slice(0, 1)}
-                          {(member.lastName?.[0] ?? "").slice(0, 1)}
-                        </div>
-                      )}
+                      <ProfileAvatar
+                        src={member.profilePicture}
+                        alt={formatDisplayName(member.firstName, member.lastName)}
+                        initials={formatInitials(member.firstName, member.lastName)}
+                        size={56}
+                        className="h-14 w-14 border border-[#9FD6D5]/70"
+                        fallbackClassName="border-[#9FD6D5]/70 bg-[#EAF9F8] text-[#1E8C8A]"
+                      />
 
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-semibold text-[#1F2937]">

@@ -2,8 +2,9 @@
 
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { EmptyState } from "@/components/admin/empty-state";
+import { ProfileAvatar } from "@/components/ui/profile-avatar";
 import { getOptimizedSupabaseImageUrl } from "@/lib/supabase-image";
-import { formatAppDate } from "@/lib/utils";
+import { formatAppDate, formatInitials } from "@/lib/utils";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -124,27 +125,21 @@ export function ProbationMembersAdmin() {
           >
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div className="flex items-start gap-3">
-                {member.profilePicture ? (
-                  <button
-                    type="button"
-                    onClick={() => setViewerImageUrl(member.profilePicture || "")}
-                    className="rounded-full transition hover:opacity-90"
-                    aria-label={`View ${member.firstName} ${member.lastName} profile picture`}
-                  >
-                    <Image
-                      src={getOptimizedSupabaseImageUrl(member.profilePicture, { width: 112, height: 112, quality: 70, resize: "cover" })}
-                      alt={`${member.firstName} ${member.lastName}`}
-                      width={56}
-                      height={56}
-                      className="h-14 w-14 rounded-full object-cover ring-2 ring-[#9FD6D5]/70"
-                    />
-                  </button>
-                ) : (
-                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#EAF9F8] text-base font-semibold text-[#1E8C8A]">
-                    {member.firstName.charAt(0)}
-                    {member.lastName.charAt(0)}
-                  </div>
-                )}
+                <button
+                  type="button"
+                  onClick={() => (member.profilePicture ? setViewerImageUrl(member.profilePicture) : undefined)}
+                  className="rounded-full transition hover:opacity-90"
+                  aria-label={`View ${member.firstName} ${member.lastName} profile picture`}
+                >
+                  <ProfileAvatar
+                    src={member.profilePicture}
+                    alt={`${member.firstName} ${member.lastName}`}
+                    initials={formatInitials(member.firstName, member.lastName)}
+                    size={56}
+                    className="h-14 w-14 ring-2 ring-[#9FD6D5]/70"
+                    fallbackClassName="bg-[#EAF9F8] text-[#1E8C8A]"
+                  />
+                </button>
                 <div>
                   <h2 className="text-xl font-semibold text-[#1F2937]">
                     {member.firstName} {member.lastName}

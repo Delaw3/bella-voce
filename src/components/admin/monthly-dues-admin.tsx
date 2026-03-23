@@ -4,11 +4,10 @@ import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { useCan } from "@/components/admin/admin-session-provider";
 import { EmptyState } from "@/components/admin/empty-state";
 import { ActionModal } from "@/components/ui/action-modal";
+import { ProfileAvatar } from "@/components/ui/profile-avatar";
 import { MONTHLY_DUES_YEAR_OPTIONS } from "@/lib/accountability-years";
 import { DUE_MONTH_NUMBERS } from "@/lib/monthly-dues";
-import { getOptimizedSupabaseImageUrl } from "@/lib/supabase-image";
-import { formatDisplayName } from "@/lib/utils";
-import Image from "next/image";
+import { formatDisplayName, formatInitials } from "@/lib/utils";
 import { useEffect, useState } from "react";
 
 type MonthlyDueStatus = {
@@ -284,20 +283,14 @@ export function MonthlyDuesAdmin() {
               className="rounded-[24px] border border-[#9FD6D5]/70 bg-white p-4 text-left transition hover:border-[#2CA6A4] hover:shadow-[0_14px_30px_rgba(31,41,55,0.08)]"
             >
               <div className="flex items-center gap-3">
-                {item.profilePicture ? (
-                  <Image
-                    src={getOptimizedSupabaseImageUrl(item.profilePicture, { width: 88, height: 88, quality: 70, resize: "cover" })}
-                    alt={formatDisplayName(item.firstName, item.lastName)}
-                    width={44}
-                    height={44}
-                    className="h-11 w-11 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#EAF9F8] text-sm font-semibold text-[#1E8C8A]">
-                    {item.firstName.slice(0, 1)}
-                    {item.lastName.slice(0, 1)}
-                  </div>
-                )}
+                <ProfileAvatar
+                  src={item.profilePicture}
+                  alt={formatDisplayName(item.firstName, item.lastName)}
+                  initials={formatInitials(item.firstName, item.lastName)}
+                  size={44}
+                  className="h-11 w-11 border border-[#9FD6D5]/70"
+                  fallbackClassName="border-[#9FD6D5]/70 bg-[#EAF9F8] text-[#1E8C8A]"
+                />
                 <div className="min-w-0">
                   <h2 className="text-base font-semibold text-[#1F2937]">{formatDisplayName(item.firstName, item.lastName)}</h2>
                   <p className="mt-1 text-xs text-slate-500">
@@ -327,20 +320,14 @@ export function MonthlyDuesAdmin() {
           <div className="flex max-h-[88vh] w-full max-w-3xl flex-col overflow-hidden rounded-[30px] border border-[#9FD6D5]/70 bg-white shadow-[0_28px_60px_rgba(31,41,55,0.22)]">
             <div className="flex items-start justify-between gap-4 border-b border-[#E6F3F2] px-5 py-4">
               <div className="flex items-center gap-3">
-                {selectedItem.profilePicture ? (
-                  <Image
-                    src={getOptimizedSupabaseImageUrl(selectedItem.profilePicture, { width: 104, height: 104, quality: 72, resize: "cover" })}
-                    alt={formatDisplayName(selectedItem.firstName, selectedItem.lastName)}
-                    width={52}
-                    height={52}
-                    className="h-[52px] w-[52px] rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="flex h-[52px] w-[52px] items-center justify-center rounded-full bg-[#EAF9F8] text-base font-semibold text-[#1E8C8A]">
-                    {selectedItem.firstName.slice(0, 1)}
-                    {selectedItem.lastName.slice(0, 1)}
-                  </div>
-                )}
+                <ProfileAvatar
+                  src={selectedItem.profilePicture}
+                  alt={formatDisplayName(selectedItem.firstName, selectedItem.lastName)}
+                  initials={formatInitials(selectedItem.firstName, selectedItem.lastName)}
+                  size={52}
+                  className="h-[52px] w-[52px] border border-[#9FD6D5]/70"
+                  fallbackClassName="border-[#9FD6D5]/70 bg-[#EAF9F8] text-[#1E8C8A]"
+                />
                 <div>
                   <h2 className="text-lg font-semibold text-[#1F2937]">
                     {formatDisplayName(selectedItem.firstName, selectedItem.lastName)}
