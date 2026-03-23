@@ -66,6 +66,7 @@ const defaultSummary: DashboardSummaryResponse = {
 
 const QUICK_ACCESS_STORAGE_KEY = "bella-voce.quick-access";
 const PUSH_PROMPT_DISMISSED_STORAGE_KEY = "bella-voce.push-prompt-dismissed";
+const DISMISSED_ALERTS_STORAGE_KEY = "bella-voce.dismissed-alerts";
 const defaultQuickAccess: QuickAccessKey[] = [
   "pay",
   "payment-history",
@@ -110,6 +111,7 @@ export function UserDashboard({ firstName, role }: UserDashboardProps) {
   const pathname = usePathname();
   const pullStartYRef = useRef<number | null>(null);
   const isPullTrackingRef = useRef(false);
+  const dismissedAlertIdsRef = useRef<Set<string>>(new Set());
   const [summary, setSummary] = useState<DashboardSummaryResponse>(defaultSummary);
   const [activeAlert, setActiveAlert] = useState<NotificationItem | null>(null);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
@@ -202,7 +204,11 @@ export function UserDashboard({ firstName, role }: UserDashboardProps) {
         excusePreview: summaryPayload.excusePreview ?? [],
         monthlyDuesPreview: summaryPayload.monthlyDuesPreview ?? [],
       });
-      setActiveAlert(summaryPayload.activeAlert ?? null);
+      if (summaryPayload.activeAlert && !dismissedAlertIdsRef.current.has(summaryPayload.activeAlert.id)) {
+        setActiveAlert(summaryPayload.activeAlert);
+      } else {
+        setActiveAlert(null);
+      }
       setNotifications(
         notificationsRes.ok && notificationsPayload.notifications ? notificationsPayload.notifications : [],
       );
@@ -271,6 +277,26 @@ export function UserDashboard({ firstName, role }: UserDashboardProps) {
       }
     } catch {
       window.localStorage.removeItem(QUICK_ACCESS_STORAGE_KEY);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    try {
+      const storedDismissedAlerts = window.sessionStorage.getItem(DISMISSED_ALERTS_STORAGE_KEY);
+      if (!storedDismissedAlerts) {
+        return;
+      }
+
+      const parsed = JSON.parse(storedDismissedAlerts) as string[];
+      if (Array.isArray(parsed)) {
+        dismissedAlertIdsRef.current = new Set(parsed.filter(Boolean));
+      }
+    } catch {
+      window.sessionStorage.removeItem(DISMISSED_ALERTS_STORAGE_KEY);
     }
   }, []);
 
@@ -533,6 +559,17 @@ export function UserDashboard({ firstName, role }: UserDashboardProps) {
   const showPullRefresh = pullDistance > 0 || isPullRefreshing;
   const showDashboardPushPrompt = isPushSupported && pushPermission === "default" && !isPushPromptDismissed;
 
+  function rememberDismissedAlert(alertId: string) {
+    dismissedAlertIdsRef.current.add(alertId);
+
+    if (typeof window !== "undefined") {
+      window.sessionStorage.setItem(
+        DISMISSED_ALERTS_STORAGE_KEY,
+        JSON.stringify([...dismissedAlertIdsRef.current]),
+      );
+    }
+  }
+
   function handleNotificationSync(payload: {
     notifications: NotificationItem[];
     unreadCount: number;
@@ -545,10 +582,13 @@ export function UserDashboard({ firstName, role }: UserDashboardProps) {
       unreadNotificationCount: payload.unreadCount,
     }));
 
-    const latestUnreadAlert =
-      payload.notifications.find((item) => item.type === "ALERT" && !item.isRead) ?? null;
+    const freshUnreadAlert = payload.newNotifications.find(
+      (item) => item.type === "ALERT" && !item.isRead && !dismissedAlertIdsRef.current.has(item.id),
+    );
 
-    setActiveAlert(latestUnreadAlert);
+    if (freshUnreadAlert) {
+      setActiveAlert(freshUnreadAlert);
+    }
 
     if (payload.newNotifications.length > 0) {
       setLiveNotification(payload.newNotifications[payload.newNotifications.length - 1] ?? null);
@@ -946,7 +986,12 @@ export function UserDashboard({ firstName, role }: UserDashboardProps) {
         message={activeAlert?.message ?? ""}
         tone="danger"
         cancelLabel="Close"
-        onClose={() => setActiveAlert(null)}
+        onClose={() => {
+          if (activeAlert?.id) {
+            rememberDismissedAlert(activeAlert.id);
+          }
+          setActiveAlert(null);
+        }}
       />
 
       <DashboardBottomNav
