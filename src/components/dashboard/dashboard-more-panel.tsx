@@ -5,7 +5,9 @@ import { ReactNode } from "react";
 type DashboardMorePanelProps = {
   unreadCount: number;
   onOpenNotifications: () => void;
+  onOpenExcuses?: () => void;
   onOpenComplaint: () => void;
+  onOpenExcos?: () => void;
   onOpenSongSelections: () => void;
   onOpenAttendanceHistory: () => void;
   onOpenPay?: () => void;
@@ -24,13 +26,31 @@ type MoreAction = {
 export function DashboardMorePanel({
   unreadCount,
   onOpenNotifications,
+  onOpenExcuses,
   onOpenComplaint,
+  onOpenExcos,
   onOpenSongSelections,
   onOpenAttendanceHistory,
   onOpenPay,
   onOpenPaymentHistory,
 }: DashboardMorePanelProps) {
   const actions: MoreAction[] = [
+    ...(onOpenExcuses
+      ? [
+          {
+            key: "excuses",
+            label: "Excuses",
+            description: "Submit and review your excuse requests.",
+            onClick: onOpenExcuses,
+            icon: (
+              <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <path d="M7 3h10l4 4v14H7z" />
+                <path d="M13 3v4h4M10 13h8M10 17h8M10 9h2" />
+              </svg>
+            ),
+          },
+        ]
+      : []),
     ...(onOpenPay
       ? [
           {
@@ -60,6 +80,22 @@ export function DashboardMorePanel({
                 <path d="M12 8v5l3 2" />
                 <path d="M3.5 12a8.5 8.5 0 1 0 2.5-6" />
                 <path d="M3 4v5h5" />
+              </svg>
+            ),
+          },
+        ]
+      : []),
+    ...(onOpenExcos
+      ? [
+          {
+            key: "excos",
+            label: "Excos",
+            description: "View choir executives and leadership posts.",
+            onClick: onOpenExcos,
+            icon: (
+              <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <path d="M12 3 5 6v5c0 4.4 2.9 8.4 7 9.8 4.1-1.4 7-5.4 7-9.8V6z" />
+                <path d="m9.5 12 1.8 1.8 3.2-3.6" />
               </svg>
             ),
           },

@@ -31,6 +31,7 @@ type EditProfileFormProps = {
 export function EditProfileForm({ profile, onSaved }: EditProfileFormProps) {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [username, setUsername] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [phoneNumber2, setPhoneNumber2] = useState("");
   const [address, setAddress] = useState("");
@@ -56,6 +57,7 @@ export function EditProfileForm({ profile, onSaved }: EditProfileFormProps) {
     if (!profile) return;
     setFirstName(profile.firstName || "");
     setLastName(profile.lastName || "");
+    setUsername(profile.username || "");
     setPhoneNumber(profile.phoneNumber || "");
     setPhoneNumber2(profile.phoneNumber2 || "");
     setAddress(profile.address || "");
@@ -217,6 +219,7 @@ export function EditProfileForm({ profile, onSaved }: EditProfileFormProps) {
         body: JSON.stringify({
           firstName,
           lastName,
+          username,
           phoneNumber,
           phoneNumber2,
           address,
@@ -317,6 +320,19 @@ export function EditProfileForm({ profile, onSaved }: EditProfileFormProps) {
             required
           />
         </div>
+      </div>
+
+      <div>
+        <label className="mb-1 block text-xs font-semibold tracking-[0.08em] text-slate-600 uppercase">
+          Username
+        </label>
+        <input
+          value={username}
+          onChange={(event) => setUsername(event.target.value.toLowerCase().replace(/\s+/g, ""))}
+          className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-[#1F2937] outline-none transition focus:border-[#2CA6A4] focus:bg-white"
+          required
+        />
+        <p className="mt-1 text-xs text-slate-500">Use 3 to 30 lowercase letters, numbers, or underscores.</p>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">

@@ -623,11 +623,13 @@ export async function checkUserDebt(userId: UserIdLike, year = new Date().getFul
       $set: {
         message: `You have unpaid dues for ${breakdown.unpaidMonths} month${breakdown.unpaidMonths === 1 ? "" : "s"}.`,
         isRead: false,
+        route: "/dashboard/pay",
       },
       $setOnInsert: {
         userId: objectUserId,
         title: "Outstanding Dues Reminder",
         type: "REMINDER",
+        route: "/dashboard/pay",
       },
     } as never,
     { upsert: true, returnDocument: "after" } as never,

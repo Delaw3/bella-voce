@@ -8,6 +8,7 @@ import {
   PaymentItemInput,
 } from "@/lib/payments";
 import { connectToDatabase } from "@/lib/mongodb";
+import { notifyUser } from "@/lib/push-notifications";
 import User from "@/models/user.model";
 import mongoose from "mongoose";
 import { NextResponse } from "next/server";
@@ -199,6 +200,17 @@ export async function POST(request: Request) {
       invalidateUserPaymentCaches(userId),
       invalidateAdminPaymentsCache(),
     ]);
+
+    if (approved?.user?.id) {
+      await notifyUser({
+        userId: approved.user.id,
+        title: "Payment confirmed",
+        message: `A payment of N${approved.totalAmount.toLocaleString()} was recorded and approved for your account.`,
+        type: "INFO",
+        route: `/dashboard/pay/history/${approved.id}`,
+        dedupeKey: `payment-manual-approved:${approved.id}`,
+      });
+    }
 
     return NextResponse.json(
       {

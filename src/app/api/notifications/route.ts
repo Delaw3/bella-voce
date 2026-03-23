@@ -32,6 +32,7 @@ export async function GET() {
           type: item.type,
           isRead: item.isRead,
           createdAt: item.createdAt.toISOString(),
+          route: item.route ?? "",
         })),
       };
     });

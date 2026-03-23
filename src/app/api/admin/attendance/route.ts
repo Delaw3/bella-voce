@@ -2,6 +2,7 @@ import { getAttendanceDateRange } from "@/lib/accountability";
 import { requireAllPermissions, requirePermission } from "@/lib/access-control";
 import { invalidateAdminSummaryCaches, invalidateUserPaymentCaches } from "@/lib/cache-invalidation";
 import { connectToDatabase } from "@/lib/mongodb";
+import { notifyUser } from "@/lib/push-notifications";
 import Attendance, {
   ATTENDANCE_STATUSES,
   AttendanceState,
@@ -203,6 +204,17 @@ export async function POST(request: Request) {
       invalidateUserPaymentCaches(userId),
       invalidateAdminSummaryCaches(),
     ]);
+
+    if (primaryStatus) {
+      await notifyUser({
+        userId,
+        title: "Attendance updated",
+        message: `Your attendance for ${date.toLocaleDateString("en-GB")} was marked as ${primaryStatus.toLowerCase()}.`,
+        type: primaryStatus === "ABSENT" ? "ALERT" : "INFO",
+        route: "/dashboard/attendance-history",
+        dedupeKey: `attendance:${userId}:${date.toISOString()}:${primaryStatus}`,
+      });
+    }
 
     return NextResponse.json({ message: "Attendance updated successfully." }, { status: 200 });
   } catch {

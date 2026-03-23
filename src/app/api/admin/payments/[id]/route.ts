@@ -1,5 +1,6 @@
 import { requirePermission } from "@/lib/access-control";
 import { invalidateAdminPaymentsCache, invalidateUserPaymentCaches } from "@/lib/cache-invalidation";
+import { notifyUser } from "@/lib/push-notifications";
 import {
   approvePaymentTransaction,
   rejectPaymentTransaction,
@@ -75,6 +76,15 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
           invalidateUserPaymentCaches(transaction.user.id),
           invalidateAdminPaymentsCache(),
         ]);
+
+        await notifyUser({
+          userId: transaction.user.id,
+          title: "Payment confirmed",
+          message: `Your payment of N${transaction.totalAmount.toLocaleString()} has been approved.`,
+          type: "INFO",
+          route: `/dashboard/pay/history/${transaction.id}`,
+          dedupeKey: `payment-approved:${transaction.id}`,
+        });
       } else {
         await invalidateAdminPaymentsCache();
       }
@@ -99,6 +109,17 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
           invalidateUserPaymentCaches(transaction.user.id),
           invalidateAdminPaymentsCache(),
         ]);
+
+        await notifyUser({
+          userId: transaction.user.id,
+          title: "Payment rejected",
+          message: transaction.adminNote?.trim()
+            ? `Your payment was rejected. Admin note: ${transaction.adminNote}`
+            : "Your payment was rejected by admin.",
+          type: "ALERT",
+          route: `/dashboard/pay/history/${transaction.id}`,
+          dedupeKey: `payment-rejected:${transaction.id}`,
+        });
       } else {
         await invalidateAdminPaymentsCache();
       }

@@ -19,6 +19,7 @@ import { MembersPanel } from "@/components/dashboard/members-panel";
 import { MonthlyDuesPanel } from "@/components/dashboard/monthly-dues-panel";
 import { NotificationsPanel } from "@/components/dashboard/notifications-panel";
 import { ProfilePanel } from "@/components/dashboard/profile-panel";
+import { RealtimeNotificationBridge } from "@/components/realtime-notification-bridge";
 import { TotalOwedCard } from "@/components/dashboard/total-owed-card";
 import { ActionModal } from "@/components/ui/action-modal";
 import {
@@ -30,6 +31,7 @@ import {
   NotificationItem,
   ProfileInfo,
 } from "@/types/dashboard";
+import { RealtimeNotificationPayload } from "@/types/realtime";
 import { useRouter } from "next/navigation";
 import { TouchEvent, useEffect, useMemo, useRef, useState } from "react";
 
@@ -64,6 +66,7 @@ const defaultSummary: DashboardSummaryResponse = {
 };
 
 const QUICK_ACCESS_STORAGE_KEY = "bella-voce.quick-access";
+const PUSH_PROMPT_DISMISSED_STORAGE_KEY = "bella-voce.push-prompt-dismissed";
 const defaultQuickAccess: QuickAccessKey[] = [
   "pay",
   "payment-history",
@@ -125,6 +128,22 @@ export function UserDashboard({ firstName, role }: UserDashboardProps) {
   const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false);
   const [isPullRefreshing, setIsPullRefreshing] = useState(false);
   const [pullDistance, setPullDistance] = useState(0);
+  const [liveNotification, setLiveNotification] = useState<RealtimeNotificationPayload | null>(null);
+  const [pushPermission, setPushPermission] = useState<NotificationPermission | "unsupported">(() => {
+    if (typeof window === "undefined" || !("Notification" in window) || !("serviceWorker" in navigator) || !("PushManager" in window)) {
+      return "unsupported";
+    }
+
+    return Notification.permission;
+  });
+  const [isPushSupported, setIsPushSupported] = useState(() => {
+    if (typeof window === "undefined") {
+      return false;
+    }
+
+    return "Notification" in window && "serviceWorker" in navigator && "PushManager" in window;
+  });
+  const [isPushPromptDismissed, setIsPushPromptDismissed] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const unresolvedFirstName = firstName || profile?.firstName || "";
@@ -218,6 +237,18 @@ export function UserDashboard({ firstName, role }: UserDashboardProps) {
   }, []);
 
   useEffect(() => {
+    if (!liveNotification) {
+      return;
+    }
+
+    const timeout = window.setTimeout(() => {
+      setLiveNotification(null);
+    }, 4200);
+
+    return () => window.clearTimeout(timeout);
+  }, [liveNotification]);
+
+  useEffect(() => {
     if (typeof window === "undefined") return;
 
     const storedValue = window.localStorage.getItem(QUICK_ACCESS_STORAGE_KEY);
@@ -231,6 +262,38 @@ export function UserDashboard({ firstName, role }: UserDashboardProps) {
     } catch {
       window.localStorage.removeItem(QUICK_ACCESS_STORAGE_KEY);
     }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    setIsPushPromptDismissed(window.localStorage.getItem(PUSH_PROMPT_DISMISSED_STORAGE_KEY) === "1");
+
+    const handlePushStatus = (event: Event) => {
+      const detail = (event as CustomEvent<{
+        permission: NotificationPermission | "unsupported";
+        supported: boolean;
+      }>).detail;
+
+      if (!detail) {
+        return;
+      }
+
+      setPushPermission(detail.permission);
+      setIsPushSupported(detail.supported);
+
+      if (detail.permission !== "default") {
+        window.localStorage.removeItem(PUSH_PROMPT_DISMISSED_STORAGE_KEY);
+        setIsPushPromptDismissed(false);
+      }
+    };
+
+    window.addEventListener("bella-voce-push-status", handlePushStatus as EventListener);
+    return () => {
+      window.removeEventListener("bella-voce-push-status", handlePushStatus as EventListener);
+    };
   }, []);
 
   async function openNotifications() {
@@ -444,6 +507,41 @@ export function UserDashboard({ firstName, role }: UserDashboardProps) {
 
   const homeHint = useMemo(() => "Tap any feature to open details.", []);
   const showPullRefresh = pullDistance > 0 || isPullRefreshing;
+  const showDashboardPushPrompt = isPushSupported && pushPermission === "default" && !isPushPromptDismissed;
+
+  function mergeNotifications(current: NotificationItem[], incoming: RealtimeNotificationPayload) {
+    const existingIndex = current.findIndex((item) => item.id === incoming.id);
+
+    if (existingIndex >= 0) {
+      const next = [...current];
+      next[existingIndex] = incoming;
+      return next.sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime());
+    }
+
+    return [incoming, ...current].sort(
+      (left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime(),
+    );
+  }
+
+  function applyRealtimeNotification(incoming: RealtimeNotificationPayload) {
+    setNotifications((current) => mergeNotifications(current, incoming));
+    setSummary((current) => {
+      const alreadyExists = current.notifications.some((item) => item.id === incoming.id);
+      const unreadIncrement = alreadyExists || incoming.isRead ? 0 : 1;
+
+      return {
+        ...current,
+        notifications: mergeNotifications(current.notifications, incoming).slice(0, 5),
+        unreadNotificationCount: current.unreadNotificationCount + unreadIncrement,
+      };
+    });
+
+    if (incoming.type === "ALERT" && !activeAlert) {
+      setActiveAlert(incoming);
+    }
+
+    setLiveNotification(incoming);
+  }
 
   return (
     <main
@@ -480,6 +578,8 @@ export function UserDashboard({ firstName, role }: UserDashboardProps) {
       </div>
 
       <section className="mx-auto w-full max-w-md space-y-4 sm:max-w-4xl">
+        <RealtimeNotificationBridge enabled onNotification={applyRealtimeNotification} />
+
         <div className="sticky top-3 z-30">
           <DashboardHeader
             firstName={unresolvedFirstName}
@@ -520,6 +620,78 @@ export function UserDashboard({ firstName, role }: UserDashboardProps) {
           className="space-y-4 transition-transform duration-200 ease-out"
           style={{ transform: `translateY(${pullDistance}px)` }}
         >
+          {showDashboardPushPrompt ? (
+            <div className="rounded-2xl border border-[#9FD6D5]/80 bg-[linear-gradient(135deg,#ffffff_0%,#eef8f7_100%)] px-4 py-4 shadow-[0_10px_24px_rgba(31,41,55,0.08)]">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-[#1F2937]">Turn on app notifications</p>
+                  <p className="mt-1 text-sm text-slate-600">
+                    Get instant alerts for complaint replies, excuse decisions, payments, dues updates, and song posts.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsPushPromptDismissed(true);
+                    if (typeof window !== "undefined") {
+                      window.localStorage.setItem(PUSH_PROMPT_DISMISSED_STORAGE_KEY, "1");
+                    }
+                  }}
+                  className="rounded-xl border border-[#9FD6D5] p-2 text-[#1E8C8A] transition hover:bg-[#EAF9F8]"
+                  aria-label="Dismiss notification permission prompt"
+                >
+                  <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8">
+                    <path d="M6 6l12 12M18 6 6 18" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => window.dispatchEvent(new Event("bella-voce-enable-push"))}
+                  className="rounded-2xl bg-[#2CA6A4] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#1E8C8A]"
+                >
+                  Enable Notifications
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveSheet("notifications");
+                  }}
+                  className="rounded-2xl border border-[#9FD6D5] px-4 py-2.5 text-sm font-semibold text-[#1E8C8A] transition hover:bg-[#EAF9F8]"
+                >
+                  View Notifications
+                </button>
+              </div>
+            </div>
+          ) : null}
+
+          {liveNotification ? (
+            <button
+              type="button"
+              onClick={() => {
+                if (liveNotification.route) {
+                  router.push(liveNotification.route);
+                } else {
+                  void openNotifications();
+                }
+                setLiveNotification(null);
+              }}
+              className="w-full rounded-2xl border border-[#9FD6D5]/80 bg-white px-4 py-3 text-left shadow-[0_10px_24px_rgba(31,41,55,0.08)] transition hover:bg-[#F8FAFA]"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-[#1F2937]">{liveNotification.title}</p>
+                  <p className="mt-1 text-sm text-slate-600">{liveNotification.message}</p>
+                </div>
+                <span className="rounded-full bg-[#EAF9F8] px-2 py-1 text-[11px] font-semibold text-[#1E8C8A]">
+                  New
+                </span>
+              </div>
+            </button>
+          ) : null}
+
           <GreetingCard
             totalOwed={summary.debt.totalOwed}
             canAccessAdmin={role === "ADMIN" || role === "SUPER_ADMIN"}
@@ -653,6 +825,12 @@ export function UserDashboard({ firstName, role }: UserDashboardProps) {
       >
         <DashboardMorePanel
           unreadCount={summary.unreadNotificationCount}
+          onOpenExcuses={() => {
+            setActiveSheet(null);
+            void runWithLoader(async () => {
+              setActiveSheet("excuses");
+            }, "Opening Excuses...");
+          }}
           onOpenPay={() => {
             setActiveSheet(null);
             void runWithLoader(async () => {
@@ -664,6 +842,12 @@ export function UserDashboard({ firstName, role }: UserDashboardProps) {
             void runWithLoader(async () => {
               router.push("/dashboard/pay/history");
             }, "Opening Payment History...");
+          }}
+          onOpenExcos={() => {
+            setActiveSheet(null);
+            void runWithLoader(async () => {
+              setActiveSheet("excos");
+            }, "Opening Excos...");
           }}
           onOpenNotifications={() => {
             setActiveSheet(null);

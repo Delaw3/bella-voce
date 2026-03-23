@@ -8,6 +8,7 @@ export type NotificationRecord = {
   title: string;
   message: string;
   type: NotificationType;
+  route?: string;
   isRead: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -19,6 +20,7 @@ const notificationSchema = new Schema<NotificationRecord>(
     title: { type: String, required: true, trim: true },
     message: { type: String, required: true, trim: true },
     type: { type: String, enum: NOTIFICATION_TYPES, default: "INFO" },
+    route: { type: String, trim: true },
     isRead: { type: Boolean, default: false },
   },
   { timestamps: true },

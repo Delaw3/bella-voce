@@ -59,6 +59,7 @@ export async function GET() {
             type: item.type,
             isRead: item.isRead,
             createdAt: item.createdAt.toISOString(),
+            route: item.route ?? "",
           })),
           activeAlert: activeAlert
             ? {
@@ -68,6 +69,7 @@ export async function GET() {
                 type: activeAlert.type,
                 isRead: activeAlert.isRead,
                 createdAt: activeAlert.createdAt.toISOString(),
+                route: activeAlert.route ?? "",
               }
             : null,
           unreadNotificationCount,

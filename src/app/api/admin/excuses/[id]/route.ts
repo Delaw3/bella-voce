@@ -1,6 +1,7 @@
 import { requirePermission } from "@/lib/access-control";
 import { invalidateAdminDashboardCache } from "@/lib/cache-invalidation";
 import { connectToDatabase } from "@/lib/mongodb";
+import { notifyUser } from "@/lib/push-notifications";
 import Excuse from "@/models/excuse.model";
 import mongoose from "mongoose";
 import { NextResponse } from "next/server";
@@ -112,6 +113,16 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     }
 
     await invalidateAdminDashboardCache();
+    await notifyUser({
+      userId: excuse.userId.toString(),
+      title: "Excuse reviewed",
+      message: adminComment
+        ? `Your excuse request is ${excuse.status.toLowerCase()}. Admin comment: ${adminComment}`
+        : `Your excuse request is ${excuse.status.toLowerCase()}.`,
+      type: excuse.status === "APPROVED" ? "INFO" : excuse.status === "REJECTED" ? "ALERT" : "REMINDER",
+      route: "/dashboard",
+      dedupeKey: `excuse:${excuse._id.toString()}:${excuse.updatedAt.toISOString()}`,
+    });
 
     return NextResponse.json({ message: "Excuse updated successfully." }, { status: 200 });
   } catch {

@@ -18,12 +18,45 @@ export async function GET(request: Request) {
   }
 
   const { searchParams } = new URL(request.url);
+  const purpose = searchParams.get("purpose")?.trim() ?? "";
   const q = searchParams.get("q")?.trim() ?? "";
   const page = toPositiveInt(searchParams.get("page"), DEFAULT_PAGE);
   const limit = Math.min(toPositiveInt(searchParams.get("limit"), DEFAULT_LIMIT), MAX_LIMIT);
   const skip = (page - 1) * limit;
 
   try {
+    if (purpose === "selector") {
+      await connectToDatabase();
+
+      const filter = {
+        ...(q
+          ? {
+              $or: [
+                { firstName: { $regex: q, $options: "i" } },
+                { lastName: { $regex: q, $options: "i" } },
+                { email: { $regex: q, $options: "i" } },
+                { username: { $regex: q, $options: "i" } },
+              ],
+            }
+          : {}),
+        status: { $ne: "DELETED" },
+      };
+
+      const members = await User.find(filter)
+        .select(
+          "firstName lastName email username phoneNumber phoneNumber2 address educationLevel voicePart stateOfOrigin lga choirLevel posts post role permissions profilePicture onboardingCompleted status createdAt",
+        )
+        .sort({ firstName: 1, lastName: 1, createdAt: -1 })
+        .lean();
+
+      return NextResponse.json(
+        {
+          members: members.map(serializeAdminMember),
+        },
+        { status: 200 },
+      );
+    }
+
     const payload = await remember(
       cacheKeys.adminMembersList(page, limit, q),
       CACHE_TTL.adminMembersList,

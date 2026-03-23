@@ -1,7 +1,9 @@
 import { requirePermission } from "@/lib/access-control";
 import { invalidateAdminDashboardCache } from "@/lib/cache-invalidation";
 import { connectToDatabase } from "@/lib/mongodb";
+import { notifyManyUsers } from "@/lib/push-notifications";
 import SongSelection, { SONG_SELECTION_STATUSES } from "@/models/song-selection.model";
+import User from "@/models/user.model";
 import mongoose from "mongoose";
 import { NextResponse } from "next/server";
 
@@ -124,6 +126,24 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
 
     if (!selection) {
       return NextResponse.json({ message: "Song selection not found." }, { status: 404 });
+    }
+
+    await invalidateAdminDashboardCache();
+
+    if (selection.status === "POSTED") {
+      const recipients = await User.find({ status: { $ne: "DELETED" } } as never).select("_id").lean();
+      const route = `/dashboard/song-selections/${selection._id.toString()}`;
+
+      await notifyManyUsers(
+        recipients.map((recipient) => ({
+          userId: recipient._id,
+          title: "New song selection posted",
+          message: `${selection.title} is now available to review.`,
+          type: "INFO",
+          route,
+          dedupeKey: `song-selection-posted:${selection._id.toString()}:${recipient._id.toString()}`,
+        })),
+      );
     }
 
     return NextResponse.json(

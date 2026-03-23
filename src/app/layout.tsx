@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Manrope } from "next/font/google";
 import { AppLoader } from "@/components/app-loader";
+import { PushNotificationManager } from "@/components/push-notification-manager";
 import { PwaRegistrar } from "@/components/pwa-registrar";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ZoomGuard } from "@/components/zoom-guard";
@@ -53,6 +54,7 @@ export default function RootLayout({
         <ThemeProvider>
           <ZoomGuard />
           <PwaRegistrar />
+          <PushNotificationManager />
           <AppLoader>{children}</AppLoader>
         </ThemeProvider>
       </body>

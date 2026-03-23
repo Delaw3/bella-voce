@@ -8,6 +8,7 @@ import {
 import { requireAnyPermission, requirePermission } from "@/lib/access-control";
 import { invalidateAdminSummaryCaches, invalidateUserPaymentCaches } from "@/lib/cache-invalidation";
 import { connectToDatabase } from "@/lib/mongodb";
+import { notifyUser } from "@/lib/push-notifications";
 import AccountabilityAdjustment from "@/models/accountability-adjustment.model";
 import UserFinance from "@/models/user-finance.model";
 import User from "@/models/user.model";
@@ -188,6 +189,15 @@ export async function PATCH(request: Request) {
       invalidateAdminSummaryCaches(),
     ]);
 
+    await notifyUser({
+      userId: updated.userId.toString(),
+      title: `${payload.type} updated`,
+      message: `${payload.type} was updated to N${amount.toLocaleString()} for ${reason}.`,
+      type: payload.type === "FINE" || payload.type === "LEVY" ? "ALERT" : "INFO",
+      route: "/dashboard/pay",
+      dedupeKey: `accountability-update:${updated._id.toString()}:${updated.updatedAt.toISOString()}`,
+    });
+
     return NextResponse.json(
       {
         message: "Accountability item updated successfully.",
@@ -261,6 +271,15 @@ export async function POST(request: Request) {
       invalidateAdminSummaryCaches(),
     ]);
 
+    await notifyUser({
+      userId: objectUserId.toString(),
+      title: `${payload.type} added`,
+      message: `${payload.type} of N${amount.toLocaleString()} was added for ${reason}.`,
+      type: payload.type === "FINE" || payload.type === "LEVY" ? "ALERT" : "INFO",
+      route: "/dashboard/pay",
+      dedupeKey: `accountability-create:${created._id.toString()}`,
+    });
+
     return NextResponse.json(
       {
         message: "Accountability item added successfully.",
@@ -307,6 +326,15 @@ export async function DELETE(request: Request) {
       invalidateUserPaymentCaches(deleted.userId.toString()),
       invalidateAdminSummaryCaches(),
     ]);
+
+    await notifyUser({
+      userId: deleted.userId.toString(),
+      title: `${deleted.type} removed`,
+      message: `${deleted.type} for ${deleted.reason ?? "your account"} was removed.`,
+      type: "INFO",
+      route: "/dashboard/pay",
+      dedupeKey: `accountability-delete:${deleted._id.toString()}`,
+    });
 
     return NextResponse.json({ message: "Accountability item deleted successfully." }, { status: 200 });
   } catch {

@@ -2,6 +2,7 @@ import { requirePermission } from "@/lib/access-control";
 import { invalidateAdminDashboardCache } from "@/lib/cache-invalidation";
 import { parseComplaintStatus, serializeComplaint } from "@/lib/complaints";
 import { connectToDatabase } from "@/lib/mongodb";
+import { notifyUser } from "@/lib/push-notifications";
 import Complaint from "@/models/complaint.model";
 import mongoose from "mongoose";
 import { NextResponse } from "next/server";
@@ -99,6 +100,27 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     }
 
     await invalidateAdminDashboardCache();
+
+    const complaintUserId =
+      complaint.userId && typeof complaint.userId === "object" && "_id" in complaint.userId
+        ? complaint.userId._id.toString()
+        : "";
+
+    if (complaintUserId) {
+      const statusText = complaint.status.toLowerCase();
+      const noteText = complaint.adminNote?.trim();
+
+      await notifyUser({
+        userId: complaintUserId,
+        title: "Complaint updated",
+        message: noteText
+          ? `Your complaint is now ${statusText}. Admin note: ${noteText}`
+          : `Your complaint is now ${statusText}.`,
+        type: complaint.status === "RESOLVED" ? "INFO" : "ALERT",
+        route: "/dashboard/complaint",
+        dedupeKey: `complaint:${complaint._id.toString()}:${complaint.updatedAt.toISOString()}`,
+      });
+    }
 
     return NextResponse.json(
       {

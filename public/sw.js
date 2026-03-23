@@ -1,6 +1,6 @@
-const STATIC_CACHE = "bella-voce-static-v1";
-const ASSET_CACHE = "bella-voce-assets-v1";
-const IMAGE_CACHE = "bella-voce-images-v1";
+const STATIC_CACHE = "bella-voce-static-v2";
+const ASSET_CACHE = "bella-voce-assets-v2";
+const IMAGE_CACHE = "bella-voce-images-v2";
 const OFFLINE_URL = "/offline.html";
 
 const PRECACHE_URLS = [
@@ -69,6 +69,64 @@ function staleWhileRevalidate(request, cacheName) {
 function networkFirstNavigation(request) {
   return fetch(request).catch(() => caches.match(OFFLINE_URL));
 }
+
+self.addEventListener("push", (event) => {
+  let payload = {
+    title: "Bella Voce",
+    body: "You have a new update.",
+    route: "/dashboard",
+    icon: "/icons/icon-192x192.png",
+    badge: "/icons/icon-192x192.png",
+    tag: undefined,
+  };
+
+  try {
+    if (event.data) {
+      payload = { ...payload, ...event.data.json() };
+    }
+  } catch {
+    // Fallback to the default payload when the push body cannot be parsed.
+  }
+
+  event.waitUntil(
+    self.registration.showNotification(payload.title, {
+      body: payload.body,
+      icon: payload.icon,
+      badge: payload.badge,
+      tag: payload.tag,
+      data: {
+        route: payload.route || "/dashboard",
+      },
+    }),
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+
+  const route = event.notification.data?.route || "/dashboard";
+  const destination = new URL(route, self.location.origin).toString();
+
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
+      for (const client of clients) {
+        if (!("focus" in client)) {
+          continue;
+        }
+
+        if (client.url.startsWith(self.location.origin)) {
+          return client.navigate(destination).then(() => client.focus());
+        }
+      }
+
+      if (self.clients.openWindow) {
+        return self.clients.openWindow(destination);
+      }
+
+      return undefined;
+    }),
+  );
+});
 
 self.addEventListener("fetch", (event) => {
   const { request } = event;

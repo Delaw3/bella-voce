@@ -1,4 +1,5 @@
 import { NotificationItem } from "@/types/dashboard";
+import Link from "next/link";
 
 type NotificationsSectionProps = {
   notifications: NotificationItem[];
@@ -21,9 +22,18 @@ export function NotificationsSection({ notifications }: NotificationsSectionProp
       ) : (
         <ul className="mt-4 space-y-3">
           {notifications.map((item) => (
-            <li key={item.id} className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-3">
-              <p className="text-sm font-semibold text-[#1F2937]">{item.title}</p>
-              <p className="mt-1 text-sm text-slate-600">{item.message}</p>
+            <li key={item.id}>
+              {item.route ? (
+                <Link href={item.route} className="block rounded-xl border border-slate-100 bg-slate-50 px-3 py-3 transition hover:bg-white">
+                  <p className="text-sm font-semibold text-[#1F2937]">{item.title}</p>
+                  <p className="mt-1 text-sm text-slate-600">{item.message}</p>
+                </Link>
+              ) : (
+                <div className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-3">
+                  <p className="text-sm font-semibold text-[#1F2937]">{item.title}</p>
+                  <p className="mt-1 text-sm text-slate-600">{item.message}</p>
+                </div>
+              )}
             </li>
           ))}
         </ul>

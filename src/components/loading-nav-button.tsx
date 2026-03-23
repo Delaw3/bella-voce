@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useTransition } from "react";
 
 type LoadingNavButtonProps = {
   href: string;
@@ -14,13 +14,14 @@ type LoadingNavButtonProps = {
 export function LoadingNavButton({ href, children, className, disabled = false, loadingText = "Opening..." }: LoadingNavButtonProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const [isLoading, setIsLoading] = useState(false);
-  const showLoading = isLoading && pathname !== href;
+  const [isPending, startNavTransition] = useTransition();
+  const showLoading = isPending && pathname !== href;
 
   function handleClick() {
-    if (isLoading || disabled) return;
-    setIsLoading(true);
-    router.push(href);
+    if (showLoading || disabled) return;
+    startNavTransition(() => {
+      router.push(href);
+    });
   }
 
   return (

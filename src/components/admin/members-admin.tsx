@@ -3,12 +3,11 @@
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { EmptyState } from "@/components/admin/empty-state";
 import { useCan } from "@/components/admin/admin-session-provider";
+import { ProfileAvatar } from "@/components/ui/profile-avatar";
 import { ActionModal } from "@/components/ui/action-modal";
 import { USER_STATUSES } from "@/lib/user-config";
-import { getOptimizedSupabaseImageUrl } from "@/lib/supabase-image";
 import { formatAppDateTime, formatDisplayName, formatInitials } from "@/lib/utils";
 import { AdminMemberItem } from "@/types/admin";
-import Image from "next/image";
 import { useEffect, useState } from "react";
 
 type MembersAdminProps = {
@@ -219,17 +218,20 @@ export function MembersAdmin({ currentRole }: MembersAdminProps) {
                       <td className="rounded-l-2xl px-3 py-3 pr-6">
                         <div className="flex items-center gap-3">
                           {member.profilePicture ? (
-                            <Image
-                              src={getOptimizedSupabaseImageUrl(member.profilePicture, { width: 80, height: 80, quality: 70, resize: "cover" })}
+                            <ProfileAvatar
+                              src={member.profilePicture}
                               alt={`${member.firstName} ${member.lastName}`}
-                              width={40}
-                              height={40}
+                              initials={formatInitials(member.firstName, member.lastName)}
+                              size={40}
                               className="h-10 w-10 rounded-full object-cover"
                             />
                           ) : (
-                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#EAF9F8] text-xs font-semibold text-[#1E8C8A]">
-                              {formatInitials(member.firstName, member.lastName)}
-                            </div>
+                            <ProfileAvatar
+                              alt={`${member.firstName} ${member.lastName}`}
+                              initials={formatInitials(member.firstName, member.lastName)}
+                              size={40}
+                              fallbackClassName="h-10 w-10 border-[#9FD6D5]/70 bg-[#EAF9F8] text-xs text-[#1E8C8A]"
+                            />
                           )}
                           <div>
                             <p className="font-semibold">{formatDisplayName(member.firstName, member.lastName)}</p>
@@ -290,22 +292,26 @@ export function MembersAdmin({ currentRole }: MembersAdminProps) {
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-3">
                 {selectedMember.profilePicture ? (
-                  <Image
-                    src={getOptimizedSupabaseImageUrl(selectedMember.profilePicture, {
+                  <ProfileAvatar
+                    src={selectedMember.profilePicture}
+                    alt={`${selectedMember.firstName} ${selectedMember.lastName}`}
+                    initials={formatInitials(selectedMember.firstName, selectedMember.lastName)}
+                    size={64}
+                    className="h-16 w-16 rounded-full object-cover"
+                    imageOptions={{
                       width: 160,
                       height: 160,
                       quality: 72,
                       resize: "cover",
-                    })}
-                    alt={`${selectedMember.firstName} ${selectedMember.lastName}`}
-                    width={64}
-                    height={64}
-                    className="h-16 w-16 rounded-full object-cover"
+                    }}
                   />
                 ) : (
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#EAF9F8] text-lg font-semibold text-[#1E8C8A]">
-                    {formatInitials(selectedMember.firstName, selectedMember.lastName)}
-                  </div>
+                  <ProfileAvatar
+                    alt={`${selectedMember.firstName} ${selectedMember.lastName}`}
+                    initials={formatInitials(selectedMember.firstName, selectedMember.lastName)}
+                    size={64}
+                    fallbackClassName="h-16 w-16 border-[#9FD6D5]/70 bg-[#EAF9F8] text-lg text-[#1E8C8A]"
+                  />
                 )}
                 <div>
                   <h2 className="font-display text-3xl text-[#1F2937]">

@@ -50,6 +50,7 @@ export async function GET() {
 type Payload = {
   firstName?: string;
   lastName?: string;
+  username?: string;
   phoneNumber?: string;
   phoneNumber2?: string;
   address?: string;
@@ -81,6 +82,7 @@ export async function PATCH(request: Request) {
 
   const firstName = payload.firstName?.trim() ?? "";
   const lastName = payload.lastName?.trim() ?? "";
+  const username = payload.username?.trim().toLowerCase() ?? "";
   const phoneNumber = payload.phoneNumber?.trim() ?? "";
   const phoneNumber2 = payload.phoneNumber2?.trim() ?? "";
   const address = payload.address?.trim() ?? "";
@@ -91,10 +93,19 @@ export async function PATCH(request: Request) {
   const choirLevelRaw = payload.choirLevel?.trim() ?? "";
   const profilePictureUrl = payload.profilePictureUrl?.trim() ?? "";
 
-  if (!firstName || !lastName || !phoneNumber || !address || !stateOfOrigin || !lga) {
+  if (!firstName || !lastName || !username || !phoneNumber || !address || !stateOfOrigin || !lga) {
     return NextResponse.json(
       {
-        message: "First name, last name, phone number, address, state of origin, and LGA are required.",
+        message: "First name, last name, username, phone number, address, state of origin, and LGA are required.",
+      },
+      { status: 400 },
+    );
+  }
+
+  if (!/^[a-z0-9_]{3,30}$/.test(username)) {
+    return NextResponse.json(
+      {
+        message: "Username must be 3 to 30 characters and contain only lowercase letters, numbers, or underscores.",
       },
       { status: 400 },
     );
@@ -136,11 +147,23 @@ export async function PATCH(request: Request) {
 
   try {
     await connectToDatabase();
+    const existingUser = await User.findOne({
+      username,
+      _id: { $ne: user._id },
+    })
+      .select("_id")
+      .lean();
+
+    if (existingUser) {
+      return NextResponse.json({ message: "That username is already in use." }, { status: 409 });
+    }
+
     const updated = await User.findByIdAndUpdate(
       user._id,
       {
         firstName,
         lastName,
+        username,
         phoneNumber,
         phoneNumber2: phoneNumber2 || undefined,
         address,

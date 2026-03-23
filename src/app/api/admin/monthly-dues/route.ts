@@ -12,6 +12,7 @@ import { requirePermission } from "@/lib/access-control";
 import { invalidateAdminSummaryCaches, invalidateUserPaymentCaches } from "@/lib/cache-invalidation";
 import { DUE_MONTH_NUMBERS, getMonthLabel } from "@/lib/monthly-dues";
 import { connectToDatabase } from "@/lib/mongodb";
+import { notifyUser } from "@/lib/push-notifications";
 import MonthlyDues from "@/models/monthly-dues.model";
 import User from "@/models/user.model";
 import mongoose from "mongoose";
@@ -149,7 +150,6 @@ export async function PATCH(request: Request) {
     await connectToDatabase();
     const settings = await ensureAccountabilitySettings();
     const globalStartYear = Number(settings?.monthlyDuesStartYear || MONTHLY_DUES_YEAR_OPTIONS[0]);
-    const currentYear = new Date().getFullYear();
 
     if (Array.isArray(payload.removedMonths) || typeof payload.monthlyDuesStartYear === "number") {
       const requestedStartYear = Number(payload.monthlyDuesStartYear);
@@ -195,6 +195,15 @@ export async function PATCH(request: Request) {
         invalidateUserPaymentCaches(userId),
         invalidateAdminSummaryCaches(),
       ]);
+
+      await notifyUser({
+        userId,
+        title: "Monthly dues updated",
+        message: "Your monthly dues settings were updated by admin.",
+        type: "INFO",
+        route: "/dashboard",
+        dedupeKey: `monthly-dues-settings:${userId}:${nextStartYear}:${removedMonths.join(",")}`,
+      });
 
       return NextResponse.json({ message: "User monthly dues settings updated successfully." }, { status: 200 });
     }
@@ -253,6 +262,15 @@ export async function PATCH(request: Request) {
       invalidateUserPaymentCaches(userId),
       invalidateAdminSummaryCaches(),
     ]);
+
+    await notifyUser({
+      userId,
+      title: payload.paid ? "Monthly dues confirmed" : "Monthly dues updated",
+      message: `${getMonthLabel(month)} ${year} dues were marked as ${payload.paid ? "paid" : "not paid"}.`,
+      type: payload.paid ? "INFO" : "REMINDER",
+      route: "/dashboard",
+      dedupeKey: `monthly-dues-status:${userId}:${year}:${month}:${payload.paid ? "paid" : "unpaid"}`,
+    });
 
     return NextResponse.json({ message: "Monthly dues status updated successfully." }, { status: 200 });
   } catch (error) {

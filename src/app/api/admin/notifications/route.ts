@@ -2,6 +2,7 @@ import { requirePermission } from "@/lib/access-control";
 import { CACHE_TTL, remember } from "@/lib/cache";
 import { invalidateAdminDashboardCache, invalidateAdminNotificationsCache, invalidateUserNotificationsCache } from "@/lib/cache-invalidation";
 import { cacheKeys } from "@/lib/cache-keys";
+import { notifyManyUsers } from "@/lib/push-notifications";
 import { USER_ROLES, UserRole } from "@/lib/user-config";
 import { connectToDatabase } from "@/lib/mongodb";
 import Notification, { NOTIFICATION_TYPES, NotificationType } from "@/models/notification.model";
@@ -16,6 +17,7 @@ type Payload = {
   title?: string;
   message?: string;
   type?: NotificationType;
+  route?: string;
 };
 
 export async function GET() {
@@ -52,6 +54,7 @@ export async function GET() {
             type: item.type,
             isRead: item.isRead,
             createdAt: item.createdAt.toISOString(),
+            route: item.route ?? "",
             user: recipient
               ? {
                   id: recipient._id?.toString() ?? "",
@@ -87,6 +90,7 @@ export async function POST(request: Request) {
   const scope = payload.scope ?? "ALL";
   const title = payload.title?.trim() ?? "";
   const message = payload.message?.trim() ?? "";
+  const route = payload.route?.trim() ?? "/dashboard";
   const type = payload.type?.trim().toUpperCase() as NotificationType | undefined;
 
   if (!title || !message || !type || !NOTIFICATION_TYPES.includes(type)) {
@@ -120,21 +124,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "No recipients found for this notification." }, { status: 404 });
     }
 
-    await Notification.insertMany(
+    await notifyManyUsers(
       recipients.map((recipient) => ({
         userId: recipient._id,
         title,
         message,
         type,
-        isRead: false,
+        route,
+        dedupeKey: `admin-broadcast:${type}:${route}:${title}:${message}:${recipient._id.toString()}`,
       })),
     );
-
-    await Promise.all([
-      invalidateAdminNotificationsCache(),
-      invalidateAdminDashboardCache(),
-      ...recipients.map((recipient) => invalidateUserNotificationsCache(recipient._id.toString())),
-    ]);
 
     return NextResponse.json(
       {

@@ -48,6 +48,7 @@ export type NotificationItem = {
   type: "INFO" | "REMINDER" | "ALERT";
   isRead: boolean;
   createdAt: string;
+  route?: string;
 };
 
 export type ExcuseItem = {
