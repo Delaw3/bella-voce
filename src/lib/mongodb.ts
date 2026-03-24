@@ -27,14 +27,29 @@ export async function connectToDatabase(): Promise<typeof mongoose> {
     throw new Error("Missing MONGODB_URI. Add it to your .env.local file.");
   }
 
-  if (cached.conn) {
+  if (cached.conn && mongoose.connection.readyState === 1) {
     return cached.conn;
   }
 
   if (!cached.promise) {
-    cached.promise = mongoose.connect(mongodbUri, { bufferCommands: false });
+    cached.promise = mongoose
+      .connect(mongodbUri, {
+        bufferCommands: false,
+        serverSelectionTimeoutMS: 10000,
+      })
+      .catch((error) => {
+        cached.promise = null;
+        cached.conn = null;
+        throw error;
+      });
   }
 
-  cached.conn = await cached.promise;
-  return cached.conn;
+  try {
+    cached.conn = await cached.promise;
+    return cached.conn;
+  } catch (error) {
+    cached.promise = null;
+    cached.conn = null;
+    throw error;
+  }
 }

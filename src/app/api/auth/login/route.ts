@@ -49,7 +49,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "Invalid login credentials." }, { status: 401 });
     }
 
-    await checkUserDebt(String(user._id));
+    try {
+      await checkUserDebt(String(user._id));
+    } catch {
+      // Debt reminder generation should never block a valid login.
+    }
 
     const { token, expiresAt } = await createSession(String(user._id));
     const response = NextResponse.json(
