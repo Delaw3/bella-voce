@@ -18,7 +18,11 @@ export async function GET() {
   try {
     const currentYear = new Date().getFullYear();
     const actorId = new mongoose.Types.ObjectId(user._id.toString());
-    await checkUserDebt(actorId, currentYear);
+    try {
+      await checkUserDebt(actorId, currentYear);
+    } catch {
+      // Reminder generation should not block the dashboard summary response.
+    }
     const payload = await remember(
       cacheKeys.userDashboardSummary(user._id.toString(), currentYear),
       CACHE_TTL.userDashboardSummary,
