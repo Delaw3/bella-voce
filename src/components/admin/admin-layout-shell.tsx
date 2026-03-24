@@ -33,9 +33,14 @@ export function AdminLayoutShell({ role, permissions, firstName, children }: Adm
   const [isLeavingAdmin, setIsLeavingAdmin] = useState(false);
   const [isPullRefreshing, setIsPullRefreshing] = useState(false);
   const [pullDistance, setPullDistance] = useState(0);
+  const canUsePullRefresh = pathname === "/admin";
+  const contentTransform =
+    canUsePullRefresh && (pullDistance > 0 || isPullRefreshing)
+      ? `translateY(${pullDistance}px)`
+      : undefined;
 
   async function refreshAdminFromPull() {
-    if (isPullRefreshing || confirmBackOpen || isLeavingAdmin) {
+    if (!canUsePullRefresh || isPullRefreshing || confirmBackOpen || isLeavingAdmin) {
       setPullDistance(0);
       return;
     }
@@ -51,7 +56,7 @@ export function AdminLayoutShell({ role, permissions, firstName, children }: Adm
   }
 
   function handleTouchStart(event: TouchEvent<HTMLElement>) {
-    if (confirmBackOpen || isLeavingAdmin || isPullRefreshing || window.scrollY > 0) {
+    if (!canUsePullRefresh || confirmBackOpen || isLeavingAdmin || isPullRefreshing || window.scrollY > 0) {
       pullStartYRef.current = null;
       isPullTrackingRef.current = false;
       return;
@@ -62,7 +67,13 @@ export function AdminLayoutShell({ role, permissions, firstName, children }: Adm
   }
 
   function handleTouchMove(event: TouchEvent<HTMLElement>) {
-    if (!isPullTrackingRef.current || pullStartYRef.current === null || confirmBackOpen || window.scrollY > 0) {
+    if (
+      !canUsePullRefresh ||
+      !isPullTrackingRef.current ||
+      pullStartYRef.current === null ||
+      confirmBackOpen ||
+      window.scrollY > 0
+    ) {
       return;
     }
 
@@ -85,7 +96,7 @@ export function AdminLayoutShell({ role, permissions, firstName, children }: Adm
     pullStartYRef.current = null;
     isPullTrackingRef.current = false;
 
-    if (pullDistance >= PULL_REFRESH_TRIGGER) {
+    if (canUsePullRefresh && pullDistance >= PULL_REFRESH_TRIGGER) {
       void refreshAdminFromPull();
       return;
     }
@@ -193,7 +204,7 @@ export function AdminLayoutShell({ role, permissions, firstName, children }: Adm
 
           <section
             className="flex-1 py-4 transition-transform duration-200 ease-out"
-            style={{ transform: `translateY(${pullDistance}px)` }}
+            style={contentTransform ? { transform: contentTransform } : undefined}
           >
             {children}
           </section>

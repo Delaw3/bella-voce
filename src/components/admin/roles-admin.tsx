@@ -339,7 +339,7 @@ export function RolesAdmin() {
 
       {mobileAccessOpen && draft ? (
         <div className="fixed inset-0 z-[90] bg-[#1F2937]/45 xl:hidden">
-          <div className="absolute inset-x-0 bottom-0 max-h-[92vh] overflow-y-auto rounded-t-[32px] bg-white p-4 shadow-2xl">
+          <div className="absolute inset-x-0 bottom-0 max-h-[88vh] overflow-y-auto rounded-t-[32px] bg-white p-4 shadow-2xl">
             {renderAccessEditor(true)}
           </div>
         </div>
