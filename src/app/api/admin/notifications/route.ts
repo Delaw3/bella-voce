@@ -55,6 +55,7 @@ export async function GET() {
             isRead: item.isRead,
             createdAt: item.createdAt.toISOString(),
             route: item.route ?? "",
+            metadata: item.metadata ?? undefined,
             user: recipient
               ? {
                   id: recipient._id?.toString() ?? "",

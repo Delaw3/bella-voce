@@ -1,3 +1,4 @@
+import { notifyAdminsOfUserActivity } from "@/lib/admin-activity-notifications";
 import { requireAuthenticatedUser } from "@/lib/auth-api";
 import { connectToDatabase } from "@/lib/mongodb";
 import Excuse from "@/models/excuse.model";
@@ -78,6 +79,13 @@ export async function POST(request: Request) {
       reason,
       excuseDate,
       status: "PENDING",
+    });
+
+    await notifyAdminsOfUserActivity({
+      actorUserId: user._id.toString(),
+      actorName: `${user.firstName} ${user.lastName}`.trim(),
+      event: "excuse_submitted",
+      itemId: created._id.toString(),
     });
 
     return NextResponse.json(

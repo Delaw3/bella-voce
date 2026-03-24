@@ -64,6 +64,7 @@ export async function GET() {
             isRead: item.isRead,
             createdAt: item.createdAt.toISOString(),
             route: item.route ?? "",
+            metadata: item.metadata ?? undefined,
           })),
           activeAlert: activeAlert
             ? {
@@ -74,6 +75,7 @@ export async function GET() {
                 isRead: activeAlert.isRead,
                 createdAt: activeAlert.createdAt.toISOString(),
                 route: activeAlert.route ?? "",
+                metadata: activeAlert.metadata ?? undefined,
               }
             : null,
           unreadNotificationCount,

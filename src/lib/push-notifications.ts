@@ -14,6 +14,7 @@ export type NotificationDeliveryInput = {
   message: string;
   type?: NotificationType;
   route?: string;
+  metadata?: Record<string, string | number | boolean | null>;
   pushTitle?: string;
   pushBody?: string;
   dedupeKey?: string;
@@ -182,6 +183,7 @@ export async function createNotificationRecord(input: NotificationDeliveryInput)
     message: input.message.trim(),
     type: input.type ?? "INFO",
     route: input.route?.trim() ?? "",
+    metadata: input.metadata,
     isRead: false,
   } as never);
 
@@ -223,6 +225,7 @@ export async function notifyManyUsers(inputs: NotificationDeliveryInput[]) {
       message: input.message.trim(),
       type: input.type ?? "INFO",
       route: input.route?.trim() ?? "",
+      metadata: input.metadata,
       isRead: false,
     })),
   );

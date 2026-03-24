@@ -1,3 +1,4 @@
+import { notifyAdminsOfUserActivity } from "@/lib/admin-activity-notifications";
 import { requireAuthenticatedUser } from "@/lib/auth-api";
 import {
   DEFAULT_COMPLAINT_LIMIT,
@@ -90,10 +91,17 @@ export async function POST(request: Request) {
   try {
     await connectToDatabase();
     const actorId = new mongoose.Types.ObjectId(user._id.toString());
-    await Complaint.create({
+    const created = await Complaint.create({
       userId: actorId as never,
       subject: complaintInput.subject,
       message: complaintInput.message,
+    });
+
+    await notifyAdminsOfUserActivity({
+      actorUserId: user._id.toString(),
+      actorName: `${user.firstName} ${user.lastName}`.trim(),
+      event: "complaint_submitted",
+      itemId: created._id.toString(),
     });
 
     return NextResponse.json(

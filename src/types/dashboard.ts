@@ -49,6 +49,7 @@ export type NotificationItem = {
   isRead: boolean;
   createdAt: string;
   route?: string;
+  metadata?: Record<string, string | number | boolean | null>;
 };
 
 export type ExcuseItem = {

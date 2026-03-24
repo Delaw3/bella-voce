@@ -1,3 +1,4 @@
+import { notifyAdminsOfUserActivity } from "@/lib/admin-activity-notifications";
 import { requireAuthenticatedUser } from "@/lib/auth-api";
 import { invalidateAdminPaymentsCache, invalidateUserPaymentCaches } from "@/lib/cache-invalidation";
 import {
@@ -90,6 +91,15 @@ export async function POST(request: Request) {
       selectedAccountId: payload.selectedAccountId,
       transferNote: payload.transferNote,
     });
+
+    if (transaction?.id) {
+      await notifyAdminsOfUserActivity({
+        actorUserId: user._id.toString(),
+        actorName: `${user.firstName} ${user.lastName}`.trim(),
+        event: "payment_submitted",
+        itemId: transaction.id,
+      });
+    }
 
     await Promise.all([
       invalidateUserPaymentCaches(user._id.toString()),
