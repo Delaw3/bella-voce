@@ -9,7 +9,7 @@ import { ADMIN_MAIN_NAV_ITEMS, ADMIN_MORE_ITEMS } from "@/lib/admin-navigation";
 import { hasPermissionValue, isAdminRole, UserRole } from "@/lib/user-config";
 import { capitalizeWords } from "@/lib/utils";
 import { usePathname, useRouter } from "next/navigation";
-import { ReactNode, useState } from "react";
+import { ReactNode, TouchEvent, useRef, useState } from "react";
 
 type AdminLayoutShellProps = {
   role: UserRole;
@@ -18,14 +18,82 @@ type AdminLayoutShellProps = {
   children: ReactNode;
 };
 
+const PULL_REFRESH_TRIGGER = 84;
+const PULL_REFRESH_MAX = 108;
+
 export function AdminLayoutShell({ role, permissions, firstName, children }: AdminLayoutShellProps) {
   const { resolvedTheme } = useTheme();
   const pathname = usePathname();
   const router = useRouter();
+  const pullStartYRef = useRef<number | null>(null);
+  const isPullTrackingRef = useRef(false);
   const mainItems = ADMIN_MAIN_NAV_ITEMS.filter((item) => hasPermissionValue(role, permissions, item.permission));
   const moreItems = ADMIN_MORE_ITEMS.filter((item) => hasPermissionValue(role, permissions, item.permission));
   const [confirmBackOpen, setConfirmBackOpen] = useState(false);
   const [isLeavingAdmin, setIsLeavingAdmin] = useState(false);
+  const [isPullRefreshing, setIsPullRefreshing] = useState(false);
+  const [pullDistance, setPullDistance] = useState(0);
+
+  async function refreshAdminFromPull() {
+    if (isPullRefreshing || confirmBackOpen || isLeavingAdmin) {
+      setPullDistance(0);
+      return;
+    }
+
+    setIsPullRefreshing(true);
+    try {
+      router.refresh();
+      await new Promise((resolve) => window.setTimeout(resolve, 700));
+    } finally {
+      setPullDistance(0);
+      setIsPullRefreshing(false);
+    }
+  }
+
+  function handleTouchStart(event: TouchEvent<HTMLElement>) {
+    if (confirmBackOpen || isLeavingAdmin || isPullRefreshing || window.scrollY > 0) {
+      pullStartYRef.current = null;
+      isPullTrackingRef.current = false;
+      return;
+    }
+
+    pullStartYRef.current = event.touches[0]?.clientY ?? null;
+    isPullTrackingRef.current = true;
+  }
+
+  function handleTouchMove(event: TouchEvent<HTMLElement>) {
+    if (!isPullTrackingRef.current || pullStartYRef.current === null || confirmBackOpen || window.scrollY > 0) {
+      return;
+    }
+
+    const currentY = event.touches[0]?.clientY ?? pullStartYRef.current;
+    const delta = currentY - pullStartYRef.current;
+
+    if (delta <= 0) {
+      setPullDistance(0);
+      return;
+    }
+
+    if (event.cancelable) {
+      event.preventDefault();
+    }
+
+    setPullDistance(Math.min(PULL_REFRESH_MAX, delta * 0.45));
+  }
+
+  function handleTouchEnd() {
+    pullStartYRef.current = null;
+    isPullTrackingRef.current = false;
+
+    if (pullDistance >= PULL_REFRESH_TRIGGER) {
+      void refreshAdminFromPull();
+      return;
+    }
+
+    setPullDistance(0);
+  }
+
+  const showPullRefresh = pullDistance > 0 || isPullRefreshing;
 
   return (
     <AdminSessionProvider value={{ role, permissions, firstName }}>
@@ -36,7 +104,39 @@ export function AdminLayoutShell({ role, permissions, firstName, children }: Adm
             ? "bg-[linear-gradient(180deg,#0b1320_0%,#122031_100%)] text-slate-100"
             : "bg-[linear-gradient(180deg,#F8FAFA_0%,#EEF8F7_100%)]",
         ].join(" ")}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onTouchCancel={handleTouchEnd}
       >
+        <div
+          className={`pointer-events-none fixed left-1/2 top-4 z-30 transition-all duration-200 ${
+            showPullRefresh ? "opacity-100" : "opacity-0"
+          }`}
+          style={{
+            transform: `translate(-50%, ${showPullRefresh ? Math.max(0, pullDistance + 44) : -80}px)`,
+          }}
+        >
+          <div className="flex h-12 w-12 items-center justify-center rounded-full border border-[#9FD6D5]/80 bg-white/95 text-[#1E8C8A] shadow-[0_14px_32px_rgba(31,41,55,0.14)] backdrop-blur">
+            <span
+              className={`inline-flex h-7 w-7 items-center justify-center rounded-full border border-[#9FD6D5] bg-[#EAF9F8] ${
+                isPullRefreshing ? "animate-spin" : ""
+              }`}
+            >
+              <svg
+                viewBox="0 0 24 24"
+                className="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+              >
+                <path d="M20 12a8 8 0 1 1-2.34-5.66" />
+                <path d="M20 4v5h-5" />
+              </svg>
+            </span>
+          </div>
+        </div>
+
         <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-3 pb-24 pt-4 sm:px-5 sm:pb-6 sm:pt-5">
           <header className="admin-shell-header sticky top-3 z-40 rounded-[30px] border border-[#9FD6D5]/70 bg-[linear-gradient(135deg,#2CA6A4_0%,#1E8C8A_100%)] px-4 py-5 text-white shadow-[0_20px_45px_rgba(31,41,55,0.16)] sm:px-6">
             <div className="flex flex-col gap-4">
@@ -91,7 +191,12 @@ export function AdminLayoutShell({ role, permissions, firstName, children }: Adm
             </div>
           </header>
 
-          <section className="flex-1 py-4">{children}</section>
+          <section
+            className="flex-1 py-4 transition-transform duration-200 ease-out"
+            style={{ transform: `translateY(${pullDistance}px)` }}
+          >
+            {children}
+          </section>
         </div>
 
         <nav

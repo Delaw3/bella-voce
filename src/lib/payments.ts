@@ -1,4 +1,5 @@
 import { CACHE_TTL, remember } from "@/lib/cache";
+import { MONTHLY_DUES_YEAR_OPTIONS } from "@/lib/accountability-years";
 import { cacheKeys } from "@/lib/cache-keys";
 import { connectToDatabase } from "@/lib/mongodb";
 import {
@@ -120,7 +121,7 @@ async function ensureSettings() {
         monthlyDues: 0,
         latenessFee: 0,
         absentFee: 0,
-        monthlyDuesStartYear: 2024,
+        monthlyDuesStartYear: MONTHLY_DUES_YEAR_OPTIONS[0],
       },
     },
     { returnDocument: "after", upsert: true },
