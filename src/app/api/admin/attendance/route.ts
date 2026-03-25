@@ -33,6 +33,15 @@ type ExcusePreview = {
   createdAt: string;
 };
 
+function formatAttendanceNotificationDate(value: Date) {
+  return new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Africa/Lagos",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(value);
+}
+
 export async function GET(request: Request) {
   const permission = await requireAllPermissions(["attendance.view", "excuses.view"]);
 
@@ -209,7 +218,7 @@ export async function POST(request: Request) {
       await notifyUser({
         userId,
         title: "Attendance updated",
-        message: `Your attendance for ${date.toLocaleDateString("en-GB")} was marked as ${primaryStatus.toLowerCase()}.`,
+        message: `Your attendance for ${formatAttendanceNotificationDate(date)} was marked as ${primaryStatus.toLowerCase()}.`,
         type: primaryStatus === "ABSENT" ? "ALERT" : "INFO",
         route: "/dashboard/attendance-history",
         dedupeKey: `attendance:${userId}:${date.toISOString()}:${primaryStatus}`,

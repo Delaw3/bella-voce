@@ -5,8 +5,10 @@ import { useCan } from "@/components/admin/admin-session-provider";
 import { EmptyState } from "@/components/admin/empty-state";
 import { ProfileAvatar } from "@/components/ui/profile-avatar";
 import { ThemedDateInput } from "@/components/ui/themed-date-input";
+import { getOptimizedSupabaseImageUrl } from "@/lib/supabase-image";
 import { excuseStatusClasses } from "@/lib/status-styles";
 import { formatAppDate, formatAppTime, formatChoirPost, formatDisplayName, formatInitials } from "@/lib/utils";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 
 type AttendanceStatus = "PRESENT" | "LATE" | "ABSENT" | "EXCUSED";
@@ -148,6 +150,10 @@ export function AttendanceAdmin() {
   const [savingUserId, setSavingUserId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [activeExcuse, setActiveExcuse] = useState<{ memberName: string; item: AttendanceExcuseItem } | null>(null);
+  const [viewerImageUrl, setViewerImageUrl] = useState("");
+
+  const markedCount = items.filter((item) => item.status !== null).length;
+  const leftCount = Math.max(0, items.length - markedCount);
 
   async function loadItems(search = query, date = selectedDate) {
     setIsLoading(true);
@@ -279,6 +285,18 @@ export function AttendanceAdmin() {
           </button>
         </div>
         <p className="mt-3 text-sm text-slate-600">Attendance for {formatAppDate(selectedDate)}</p>
+        {!isLoading && items.length > 0 ? (
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <div className="rounded-2xl bg-[#EAF9F8] px-4 py-3">
+              <p className="text-[11px] font-semibold tracking-[0.08em] text-[#1E8C8A] uppercase">Marked</p>
+              <p className="mt-1 text-2xl font-semibold text-[#1F2937]">{markedCount}</p>
+            </div>
+            <div className="rounded-2xl bg-[#F8FAFA] px-4 py-3">
+              <p className="text-[11px] font-semibold tracking-[0.08em] text-slate-500 uppercase">Left</p>
+              <p className="mt-1 text-2xl font-semibold text-[#1F2937]">{leftCount}</p>
+            </div>
+          </div>
+        ) : null}
         {message ? (
           <p className="mt-3 rounded-2xl border border-[#9FD6D5] bg-[#F8FAFA] px-4 py-3 text-sm text-[#1E8C8A]">{message}</p>
         ) : null}
@@ -299,14 +317,21 @@ export function AttendanceAdmin() {
               <div className="flex flex-col gap-4">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div className="flex items-center gap-3">
-                    <ProfileAvatar
-                      src={item.profilePicture}
-                      alt={displayName}
-                      initials={formatInitials(item.firstName, item.lastName)}
-                      size={48}
-                      className="h-12 w-12 border border-[#9FD6D5]/70"
-                      fallbackClassName="border-[#9FD6D5]/70 bg-[#EAF9F8] text-[#1E8C8A]"
-                    />
+                    <button
+                      type="button"
+                      onClick={() => (item.profilePicture ? setViewerImageUrl(item.profilePicture) : undefined)}
+                      className="rounded-full transition hover:opacity-90"
+                      aria-label={`View ${displayName} profile picture`}
+                    >
+                      <ProfileAvatar
+                        src={item.profilePicture}
+                        alt={displayName}
+                        initials={formatInitials(item.firstName, item.lastName)}
+                        size={48}
+                        className="h-12 w-12 border border-[#9FD6D5]/70"
+                        fallbackClassName="border-[#9FD6D5]/70 bg-[#EAF9F8] text-[#1E8C8A]"
+                      />
+                    </button>
 
                     <div className="min-w-0">
                       <h2 className="text-base font-semibold text-[#1F2937]">{displayName}</h2>
@@ -439,6 +464,30 @@ export function AttendanceAdmin() {
                 </div>
               ) : null}
             </div>
+          </div>
+        </div>
+      ) : null}
+
+      {viewerImageUrl ? (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-[#1F2937]/55 p-4 backdrop-blur-[2px]">
+          <div className="relative w-full max-w-md rounded-[28px] border border-[#9FD6D5]/70 bg-white p-4 shadow-[0_28px_60px_rgba(31,41,55,0.22)]">
+            <button
+              type="button"
+              onClick={() => setViewerImageUrl("")}
+              className="absolute right-4 top-4 rounded-xl border border-slate-200 p-2 text-slate-600 transition hover:border-[#9FD6D5] hover:text-[#1E8C8A]"
+              aria-label="Close image viewer"
+            >
+              <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M18 6 6 18M6 6l12 12" />
+              </svg>
+            </button>
+            <Image
+              src={getOptimizedSupabaseImageUrl(viewerImageUrl, { width: 960, quality: 80, resize: "contain" })}
+              alt="Profile preview"
+              width={720}
+              height={720}
+              className="mt-8 h-auto w-full rounded-[24px] object-cover"
+            />
           </div>
         </div>
       ) : null}
