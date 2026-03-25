@@ -186,19 +186,25 @@ export async function POST(request: Request) {
 
   try {
     await connectToDatabase();
-    await Attendance.findOneAndUpdate(
-      { userId: new mongoose.Types.ObjectId(userId), date } as never,
-      {
-        $setOnInsert: { userId: new mongoose.Types.ObjectId(userId), date },
-        $set: { ...finalState, status: primaryStatus ?? undefined },
-      } as never,
-      { new: true, upsert: true, runValidators: true, setDefaultsOnInsert: true } as never,
-    );
+    const actorId = new mongoose.Types.ObjectId(userId);
+
+    if (!primaryStatus) {
+      await Attendance.findOneAndDelete({ userId: actorId, date } as never);
+    } else {
+      await Attendance.findOneAndUpdate(
+        { userId: actorId, date } as never,
+        {
+          $setOnInsert: { userId: actorId, date },
+          $set: { ...finalState, status: primaryStatus },
+        } as never,
+        { new: true, upsert: true, runValidators: true, setDefaultsOnInsert: true } as never,
+      );
+    }
 
     if (primaryStatus === "EXCUSED") {
       await Excuse.updateMany(
         {
-          userId: new mongoose.Types.ObjectId(userId),
+          userId: actorId,
           excuseDate: { $gte: date, $lt: nextDate },
         } as never,
         {

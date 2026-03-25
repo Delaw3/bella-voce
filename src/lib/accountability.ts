@@ -598,13 +598,23 @@ export async function getUserAttendanceHistory(
     .sort({ date: -1, createdAt: -1 })
     .lean();
 
-  return items.map((item) => ({
-    id: item._id.toString(),
-    date: item.date.toISOString(),
-    status: getPrimaryAttendanceStatus(normalizeAttendanceState(item)) ?? "PRESENT",
-    createdAt: item.createdAt.toISOString(),
-    updatedAt: item.updatedAt.toISOString(),
-  }));
+  return items
+    .map((item) => {
+      const status = getPrimaryAttendanceStatus(normalizeAttendanceState(item));
+
+      if (!status) {
+        return null;
+      }
+
+      return {
+        id: item._id.toString(),
+        date: item.date.toISOString(),
+        status,
+        createdAt: item.createdAt.toISOString(),
+        updatedAt: item.updatedAt.toISOString(),
+      };
+    })
+    .filter((item): item is UserAttendanceItem => Boolean(item));
 }
 
 export async function checkUserDebt(userId: UserIdLike, year = new Date().getFullYear()) {
