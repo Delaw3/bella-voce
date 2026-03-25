@@ -10,7 +10,7 @@ type AttendanceCalendarProps = {
 };
 
 function getDisplayStatus(status: AttendanceHistoryItem["status"]) {
-  return status === "LATE" ? "PRESENT" : status;
+  return status;
 }
 
 function getAttendanceDateParts(value: string) {

@@ -2,7 +2,7 @@
 
 import { AttendanceCalendar } from "@/components/dashboard/attendance-calendar";
 import { AttendanceHistoryItem } from "@/types/dashboard";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 const statusClasses = {
   PRESENT: "border-emerald-200 bg-emerald-50 text-emerald-700",
@@ -12,7 +12,7 @@ const statusClasses = {
 } as const;
 
 function getDisplayStatus(status: AttendanceHistoryItem["status"]) {
-  return status === "LATE" ? "PRESENT" : status;
+  return status;
 }
 
 function formatAttendanceDate(value: string) {
@@ -33,19 +33,21 @@ export function AttendanceHistoryView() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
+  const loadAttendance = useCallback(
+    async (options?: { silent?: boolean }) => {
+      const silent = options?.silent ?? false;
 
-    async function loadAttendance() {
-      setIsLoading(true);
+      if (!silent) {
+        setIsLoading(true);
+      }
       setError(null);
 
       let response: Response;
       try {
         response = await fetch(`/api/attendance/user?month=${month}&year=${year}`, { cache: "no-store" });
       } catch {
-        if (!cancelled) {
-          setError("Unable to reach attendance history right now.");
+        setError("Unable to reach attendance history right now.");
+        if (!silent) {
           setIsLoading(false);
         }
         return;
@@ -65,22 +67,55 @@ export function AttendanceHistoryView() {
         };
       }
 
-      if (cancelled) return;
-
       if (response.ok) {
         setItems(payload.attendance ?? []);
       } else {
         setError(payload.message ?? "Unable to load attendance history.");
       }
-      setIsLoading(false);
+      if (!silent) {
+        setIsLoading(false);
+      }
+    },
+    [month, year],
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadInitialAttendance() {
+      if (cancelled) {
+        return;
+      }
+
+      await loadAttendance();
     }
 
-    void loadAttendance();
+    void loadInitialAttendance();
 
     return () => {
       cancelled = true;
     };
-  }, [month, year]);
+  }, [loadAttendance]);
+
+  useEffect(() => {
+    function handleVisibilityRefresh() {
+      if (document.visibilityState === "visible") {
+        void loadAttendance({ silent: true });
+      }
+    }
+
+    function handleFocusRefresh() {
+      void loadAttendance({ silent: true });
+    }
+
+    window.addEventListener("focus", handleFocusRefresh);
+    document.addEventListener("visibilitychange", handleVisibilityRefresh);
+
+    return () => {
+      window.removeEventListener("focus", handleFocusRefresh);
+      document.removeEventListener("visibilitychange", handleVisibilityRefresh);
+    };
+  }, [loadAttendance]);
 
   const groupedItems = useMemo(() => {
     return items.reduce<Array<{ date: string; record: AttendanceHistoryItem }>>((accumulator, item) => {
