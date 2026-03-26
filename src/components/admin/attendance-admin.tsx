@@ -35,6 +35,7 @@ type AttendanceItem = {
   firstName: string;
   lastName: string;
   email: string;
+  choirLevel?: "member" | "probation";
   voicePart?: string;
   profilePicture?: string;
   posts?: string[];
@@ -42,6 +43,8 @@ type AttendanceItem = {
   status: AttendanceStatus | null;
   excuse: AttendanceExcuseItem | null;
 };
+
+type AttendanceAudienceFilter = "all" | "member" | "probation";
 
 const attendanceActions: Array<{
   status: AttendanceStatus;
@@ -57,7 +60,7 @@ const attendanceActions: Array<{
   },
   {
     status: "LATE",
-    label: "Late",
+    label: "Present (Late)",
     activeClasses: "border-amber-200 bg-amber-100 text-amber-700 shadow-[inset_0_0_0_1px_rgba(245,158,11,0.14)]",
     idleClasses: "border-amber-100 bg-white text-amber-700 hover:bg-amber-50",
   },
@@ -84,7 +87,7 @@ function stateToStatus(state: AttendanceState): AttendanceStatus | null {
 }
 
 function isActionActive(state: AttendanceState, status: AttendanceStatus) {
-  if (status === "PRESENT") return state.present;
+  if (status === "PRESENT") return state.present && !state.late;
   if (status === "LATE") return state.late;
   if (status === "ABSENT") return state.absent;
   return state.excused;
@@ -93,8 +96,7 @@ function isActionActive(state: AttendanceState, status: AttendanceStatus) {
 function getDisplayStatus(state: AttendanceState): string | null {
   if (state.excused) return "EXCUSED";
   if (state.absent) return "ABSENT";
-  if (state.present && state.late) return "PRESENT + LATE";
-  if (state.late) return "LATE";
+  if (state.late) return "PRESENT (LATE)";
   if (state.present) return "PRESENT";
   return null;
 }
@@ -144,6 +146,7 @@ export function AttendanceAdmin() {
   const canDelete = useCan("attendance.delete");
   const canViewExcuses = useCan("excuses.view");
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().slice(0, 10));
+  const [audienceFilter, setAudienceFilter] = useState<AttendanceAudienceFilter>("all");
   const [query, setQuery] = useState("");
   const [items, setItems] = useState<AttendanceItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -152,8 +155,17 @@ export function AttendanceAdmin() {
   const [activeExcuse, setActiveExcuse] = useState<{ memberName: string; item: AttendanceExcuseItem } | null>(null);
   const [viewerImageUrl, setViewerImageUrl] = useState("");
 
-  const markedCount = items.filter((item) => item.status !== null).length;
-  const leftCount = Math.max(0, items.length - markedCount);
+  const filteredItems = items.filter((item) => {
+    if (audienceFilter === "all") {
+      return true;
+    }
+
+    const choirLevel = item.choirLevel ?? "member";
+    return choirLevel === audienceFilter;
+  });
+
+  const markedCount = filteredItems.filter((item) => item.status !== null).length;
+  const leftCount = Math.max(0, filteredItems.length - markedCount);
 
   async function loadItems(search = query, date = selectedDate) {
     setIsLoading(true);
@@ -285,6 +297,30 @@ export function AttendanceAdmin() {
           </button>
         </div>
         <p className="mt-3 text-sm text-slate-600">Attendance for {formatAppDate(selectedDate)}</p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {[
+            { value: "all", label: "All" },
+            { value: "member", label: "Members" },
+            { value: "probation", label: "Probation" },
+          ].map((option) => {
+            const active = audienceFilter === option.value;
+
+            return (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => setAudienceFilter(option.value as AttendanceAudienceFilter)}
+                className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
+                  active
+                    ? "border-[#2CA6A4] bg-[#EAF9F8] text-[#1E8C8A]"
+                    : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                }`}
+              >
+                {option.label}
+              </button>
+            );
+          })}
+        </div>
         {!isLoading && items.length > 0 ? (
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             <div className="rounded-2xl bg-[#EAF9F8] px-4 py-3">
@@ -303,10 +339,10 @@ export function AttendanceAdmin() {
       </section>
 
       {isLoading ? <p className="text-sm text-slate-600">Loading attendance...</p> : null}
-      {!isLoading && items.length === 0 ? <EmptyState message="No members found for attendance." /> : null}
+      {!isLoading && filteredItems.length === 0 ? <EmptyState message="No users found for this attendance filter." /> : null}
 
       <div className="grid gap-3">
-        {items.map((item) => {
+        {filteredItems.map((item) => {
           const displayName = formatDisplayName(item.firstName, item.lastName);
 
           return (

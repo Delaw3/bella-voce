@@ -12,6 +12,10 @@ const statusClasses = {
 } as const;
 
 function getDisplayStatus(status: AttendanceHistoryItem["status"]) {
+  if (status === "LATE") {
+    return "PRESENT (LATE)";
+  }
+
   return status;
 }
 
@@ -185,7 +189,7 @@ export function AttendanceHistoryView() {
                   <p className="dashboard-feature-copy mt-1 text-xs text-slate-500">Attendance record</p>
                 </div>
                 <span
-                  className={`rounded-full border px-3 py-1 text-[11px] font-semibold ${statusClasses[getDisplayStatus(record.status)]}`}
+                  className={`rounded-full border px-3 py-1 text-[11px] font-semibold ${statusClasses[record.status]}`}
                 >
                   {getDisplayStatus(record.status)}
                 </span>

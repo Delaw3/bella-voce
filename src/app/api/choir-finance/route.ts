@@ -1,6 +1,7 @@
 import { requireAuthenticatedUser } from "@/lib/auth-api";
 import { checkUserRole } from "@/lib/auth-session";
 import { connectToDatabase } from "@/lib/mongodb";
+import { formatDisplayName } from "@/lib/utils";
 import ChoirFinance, { CHOIR_FINANCE_TYPES, ChoirFinanceType } from "@/models/choir-finance.model";
 import mongoose from "mongoose";
 import { NextResponse } from "next/server";
@@ -18,7 +19,7 @@ function resolveUserName(user: unknown): string {
 
   const firstName = typeof userRecord.firstName === "string" ? userRecord.firstName : "";
   const lastName = typeof userRecord.lastName === "string" ? userRecord.lastName : "";
-  return [firstName, lastName].filter(Boolean).join(" ").trim();
+  return formatDisplayName(firstName, lastName);
 }
 
 const DEFAULT_PAGE = 1;

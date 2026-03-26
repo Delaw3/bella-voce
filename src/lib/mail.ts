@@ -2,6 +2,7 @@ import nodemailer from "nodemailer";
 import type { SendMailOptions } from "nodemailer";
 import path from "path";
 import { buildAdminWaitlistInviteTemplate } from "@/templates/admin-waitlist-invite-template";
+import { buildPasswordResetOtpTemplate } from "@/templates/password-reset-otp-template";
 import { buildWaitlistEmailTemplate } from "@/templates/waitlist-email-template";
 
 type MailPayload = {
@@ -16,6 +17,12 @@ type WaitlistMailPayload = {
   to: string;
   firstName: string;
   registrationId: string;
+};
+
+type PasswordResetOtpMailPayload = {
+  to: string;
+  firstName: string;
+  otp: string;
 };
 
 const emailUser = process.env.EMAIL_USER;
@@ -79,6 +86,28 @@ export async function sendAdminWaitlistInviteMail({
   registrationId,
 }: WaitlistMailPayload) {
   const template = buildAdminWaitlistInviteTemplate({ firstName, registrationId });
+
+  return sendMail({
+    to,
+    subject: template.subject,
+    text: template.text,
+    html: template.html,
+    attachments: [
+      {
+        filename: "bella-voce-logo.png",
+        path: path.join(process.cwd(), "public", "images", "bella-voce-logo.png"),
+        cid: "bella-voce-logo",
+      },
+    ],
+  });
+}
+
+export async function sendPasswordResetOtpMail({
+  to,
+  firstName,
+  otp,
+}: PasswordResetOtpMailPayload) {
+  const template = buildPasswordResetOtpTemplate({ firstName, otp });
 
   return sendMail({
     to,

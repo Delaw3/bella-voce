@@ -12,6 +12,10 @@ export function capitalizeWords(value: string): string {
     .replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
+export function formatNameString(value?: string): string {
+  return capitalizeWords(value ?? "");
+}
+
 export function formatDisplayName(firstName?: string, lastName?: string): string {
   return [capitalizeWords(firstName ?? ""), capitalizeWords(lastName ?? "")]
     .filter(Boolean)

@@ -68,7 +68,7 @@ export async function GET(request: Request) {
       : {};
 
     const users = await User.find(filter)
-      .select("firstName lastName email voicePart profilePicture posts")
+      .select("firstName lastName email voicePart profilePicture posts choirLevel")
       .sort({ firstName: 1, lastName: 1 })
       .lean();
 
@@ -117,6 +117,7 @@ export async function GET(request: Request) {
           voicePart: user.voicePart ?? "",
           profilePicture: user.profilePicture ?? "",
           posts: user.posts ?? [],
+          choirLevel: user.choirLevel ?? "member",
           state: attendanceMap.get(user._id.toString())?.state ?? { present: false, late: false, absent: false, excused: false },
           status: attendanceMap.get(user._id.toString())?.status ?? null,
           excuse: excuseMap.get(user._id.toString()) ?? null,

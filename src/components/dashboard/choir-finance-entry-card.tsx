@@ -1,5 +1,5 @@
 import { formatNaira } from "@/lib/naira";
-import { capitalizeWords, formatAppDate } from "@/lib/utils";
+import { capitalizeWords, formatAppDate, formatNameString } from "@/lib/utils";
 import { ChoirFinanceEntry } from "@/types/dashboard";
 
 type ChoirFinanceEntryCardProps = {
@@ -18,8 +18,8 @@ export function ChoirFinanceEntryCard({ entry }: ChoirFinanceEntryCardProps) {
         <div>
           <p className="text-sm font-semibold text-[#1F2937]">{entry.description}</p>
           <p className="mt-1 text-xs text-slate-500">{formatAppDate(entry.financeDate)}</p>
-          {entry.postedBy ? <p className="mt-1 text-xs text-slate-500">Posted by {entry.postedBy}</p> : null}
-          {entry.editedBy ? <p className="mt-1 text-xs text-slate-500">Edited by {entry.editedBy}</p> : null}
+          {entry.postedBy ? <p className="mt-1 text-xs text-slate-500">Posted by {formatNameString(entry.postedBy)}</p> : null}
+          {entry.editedBy ? <p className="mt-1 text-xs text-slate-500">Edited by {formatNameString(entry.editedBy)}</p> : null}
         </div>
         <span className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${badgeClass}`}>
           {capitalizeWords(entry.type)}

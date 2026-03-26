@@ -5,7 +5,7 @@ import { useCan } from "@/components/admin/admin-session-provider";
 import { EmptyState } from "@/components/admin/empty-state";
 import { ActionModal } from "@/components/ui/action-modal";
 import { ThemedDateInput } from "@/components/ui/themed-date-input";
-import { formatAppDate } from "@/lib/utils";
+import { formatAppDate, formatNameString } from "@/lib/utils";
 import { AdminChoirFinanceItem } from "@/types/admin";
 import { ChoirFinanceResponse } from "@/types/dashboard";
 import { useEffect, useState } from "react";
@@ -184,8 +184,8 @@ export function ChoirFinanceAdmin() {
               <div>
                 <h2 className="text-lg font-semibold text-[#1F2937]">{entry.description}</h2>
                 <p className="text-sm text-slate-600">{formatAppDate(entry.financeDate)}</p>
-                {entry.postedBy ? <p className="mt-1 text-xs text-slate-500">Posted by {entry.postedBy}</p> : null}
-                {entry.editedBy ? <p className="mt-1 text-xs text-slate-500">Edited by {entry.editedBy}</p> : null}
+                {entry.postedBy ? <p className="mt-1 text-xs text-slate-500">Posted by {formatNameString(entry.postedBy)}</p> : null}
+                {entry.editedBy ? <p className="mt-1 text-xs text-slate-500">Edited by {formatNameString(entry.editedBy)}</p> : null}
               </div>
               <div className="text-right">
                 <p className="text-sm font-semibold text-[#1E8C8A]">{entry.type}</p>

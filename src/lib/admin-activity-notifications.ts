@@ -1,5 +1,6 @@
 import { connectToDatabase } from "@/lib/mongodb";
 import { notifyManyUsers } from "@/lib/push-notifications";
+import { formatNameString } from "@/lib/utils";
 import { resolvePermissions, type PermissionKey } from "@/lib/user-config";
 import User from "@/models/user.model";
 
@@ -45,6 +46,7 @@ const EVENT_CONFIG: Record<
 
 export async function notifyAdminsOfUserActivity(params: AdminActivityNotificationParams) {
   const config = EVENT_CONFIG[params.event];
+  const actorName = formatNameString(params.actorName);
 
   await connectToDatabase();
   const adminUsers = await User.find({
@@ -76,7 +78,7 @@ export async function notifyAdminsOfUserActivity(params: AdminActivityNotificati
     [...recipientIds].map((recipientId) => ({
       userId: recipientId,
       title: config.title,
-      message: config.buildMessage(params.actorName),
+      message: config.buildMessage(actorName),
       type: "INFO" as const,
       route: config.route,
       metadata: {

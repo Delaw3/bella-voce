@@ -10,6 +10,10 @@ type AttendanceCalendarProps = {
 };
 
 function getDisplayStatus(status: AttendanceHistoryItem["status"]) {
+  if (status === "LATE") {
+    return "PRESENT (LATE)";
+  }
+
   return status;
 }
 
@@ -94,6 +98,7 @@ export function AttendanceCalendar({ records, month, year }: AttendanceCalendarP
           const cellDateKey = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
           const record = recordsByDay.get(cellDateKey);
           const displayStatus = record ? getDisplayStatus(record.status) : null;
+          const statusToneClass = record ? statusTone[record.status] : null;
           const isToday = todayKey === cellDateKey;
 
           return (
@@ -106,8 +111,8 @@ export function AttendanceCalendar({ records, month, year }: AttendanceCalendarP
               }`}
             >
               {day}
-              {record ? (
-                <span className={`absolute right-1.5 bottom-1.5 h-2.5 w-2.5 rounded-full ${statusTone[displayStatus ?? "PRESENT"]}`} />
+              {record && statusToneClass ? (
+                <span className={`absolute right-1.5 bottom-1.5 h-2.5 w-2.5 rounded-full ${statusToneClass}`} />
               ) : null}
             </button>
           );

@@ -219,12 +219,6 @@ export async function PATCH(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const permission = await requirePermission("accountability_items.edit");
-
-  if (!permission.ok) {
-    return NextResponse.json({ message: permission.message }, { status: permission.status });
-  }
-
   let payload: Payload;
   try {
     payload = (await request.json()) as Payload;
@@ -236,6 +230,15 @@ export async function POST(request: Request) {
   const userIds = Array.isArray(payload.userIds) ? payload.userIds.map((item) => item.trim()).filter(Boolean) : [];
   const amount = toAmount(payload.amount);
   const reason = payload.reason?.trim() ?? "";
+  const isBulkLevyRequest = userIds.length > 0;
+
+  const permission = isBulkLevyRequest
+    ? await requireAnyPermission(["accountability.edit", "accountability_items.edit"])
+    : await requirePermission("accountability_items.edit");
+
+  if (!permission.ok) {
+    return NextResponse.json({ message: permission.message }, { status: permission.status });
+  }
 
   if (!payload.type || !["PLEDGED", "FINE", "LEVY"].includes(payload.type)) {
     return NextResponse.json({ message: "Select a valid accountability item type." }, { status: 400 });
