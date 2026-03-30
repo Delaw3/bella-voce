@@ -73,10 +73,13 @@ export function PsalmistAdmin() {
 
   async function fetchMembers() {
     const response = await fetch("/api/admin/members?purpose=selector");
-    const payload = (await response.json()) as { members?: AdminMemberItem[] };
+    const payload = (await response.json()) as { members?: AdminMemberItem[]; message?: string };
     if (response.ok) {
       setMembers(payload.members ?? []);
+      return;
     }
+
+    showFeedback("Unable to Load Users", payload.message ?? "Unable to load users for psalmist selection.", "error");
   }
 
   async function loadItems(month = selectedMonth, query = search) {
@@ -187,7 +190,7 @@ export function PsalmistAdmin() {
           <button
             type="button"
             onClick={() => setIsUserPickerOpen(true)}
-            className="flex min-h-[52px] items-center justify-between gap-3 rounded-2xl border border-[#9FD6D5] bg-[#F8FAFA] px-4 py-3 text-left text-sm transition hover:bg-white"
+            className="flex min-h-13 items-center justify-between gap-3 rounded-2xl border border-[#9FD6D5] bg-[#F8FAFA] px-4 py-3 text-left text-sm transition hover:bg-white"
           >
             <div className="min-w-0">
               <p className={`truncate font-medium ${selectedMember ? "text-[#1F2937]" : "text-slate-500"}`}>
@@ -200,7 +203,7 @@ export function PsalmistAdmin() {
             </svg>
           </button>
 
-          <label className="flex min-h-[52px] items-center gap-3 rounded-2xl border border-[#9FD6D5] bg-[#F8FAFA] px-4 py-3 text-sm text-[#1F2937]">
+          <label className="flex min-h-13 items-center gap-3 rounded-2xl border border-[#9FD6D5] bg-[#F8FAFA] px-4 py-3 text-sm text-[#1F2937]">
             <input
               type="checkbox"
               checked={notifySelectedUser}
@@ -274,7 +277,7 @@ export function PsalmistAdmin() {
 
       <div className="grid gap-3">
         {items.map((item) => (
-          <article key={item.id} className="rounded-[24px] border border-[#9FD6D5]/70 bg-white p-4">
+          <article key={item.id} className="rounded-3xl border border-[#9FD6D5]/70 bg-white p-4">
             <div className="flex items-start justify-between gap-3">
               <div className="flex min-w-0 items-center gap-3">
                 <ProfileAvatar

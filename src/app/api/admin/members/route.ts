@@ -1,4 +1,4 @@
-import { requirePermission } from "@/lib/access-control";
+import { requireAnyPermission, requirePermission } from "@/lib/access-control";
 import { serializeAdminMember, toPositiveInt } from "@/lib/admin-users";
 import { CACHE_TTL, remember } from "@/lib/cache";
 import { cacheKeys } from "@/lib/cache-keys";
@@ -11,18 +11,21 @@ const DEFAULT_LIMIT = 10;
 const MAX_LIMIT = 50;
 
 export async function GET(request: Request) {
-  const permission = await requirePermission("members.view");
-
-  if (!permission.ok) {
-    return NextResponse.json({ message: permission.message }, { status: permission.status });
-  }
-
   const { searchParams } = new URL(request.url);
   const purpose = searchParams.get("purpose")?.trim() ?? "";
   const q = searchParams.get("q")?.trim() ?? "";
   const page = toPositiveInt(searchParams.get("page"), DEFAULT_PAGE);
   const limit = Math.min(toPositiveInt(searchParams.get("limit"), DEFAULT_LIMIT), MAX_LIMIT);
   const skip = (page - 1) * limit;
+
+  const permission =
+    purpose === "selector"
+      ? await requireAnyPermission(["members.view", "psalmist.view", "notifications.view", "accountability.view"])
+      : await requirePermission("members.view");
+
+  if (!permission.ok) {
+    return NextResponse.json({ message: permission.message }, { status: permission.status });
+  }
 
   try {
     if (purpose === "selector") {

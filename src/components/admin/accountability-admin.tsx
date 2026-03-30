@@ -28,6 +28,7 @@ export function AccountabilityAdmin() {
   const canViewItems = useCan("accountability_items.view");
   const canEditItems = useCan("accountability_items.edit");
   const canDeleteItems = useCan("accountability_items.delete");
+  const canManageBulkLevy = canEditAccountability || canEditItems;
   const [items, setItems] = useState<AdminAccountabilityItem[]>([]);
   const [members, setMembers] = useState<AdminMemberItem[]>([]);
   const [selectedItem, setSelectedItem] = useState<AdminAccountabilityItem | null>(null);
@@ -309,7 +310,7 @@ export function AccountabilityAdmin() {
         badge="Operational Admin"
       />
 
-      {canEditAccountability ? (
+      {canManageBulkLevy ? (
         <section className="rounded-[28px] border border-[#9FD6D5]/70 bg-white p-4 shadow-[0_14px_30px_rgba(31,41,55,0.07)]">
           <div className="flex flex-col gap-4">
             <div>
