@@ -119,7 +119,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
         userId: complaintUserId,
         title: "Complaint updated",
         message: noteText
-          ? `Your complaint is now ${statusText}. Admin note: ${noteText}`
+          ? `Your complaint is now ${statusText}. ${noteText}`
           : `Your complaint is now ${statusText}.`,
         type: complaint.status === "RESOLVED" ? "INFO" : "ALERT",
         route: "/dashboard/complaint",
