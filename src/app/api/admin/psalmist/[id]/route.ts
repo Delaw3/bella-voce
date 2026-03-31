@@ -3,7 +3,7 @@ import { invalidateAdminPsalmistCache, invalidatePsalmistMonthCaches } from "@/l
 import { connectToDatabase } from "@/lib/mongodb";
 import { getPsalmistMonthKey, normalizePsalmistDateInput, serializePsalmistItem } from "@/lib/psalmist";
 import { notifyUser } from "@/lib/push-notifications";
-import Psalmist from "@/models/psalmist.model";
+import Psalmist, { ensurePsalmistIndexes } from "@/models/psalmist.model";
 import User from "@/models/user.model";
 import mongoose from "mongoose";
 import { NextResponse } from "next/server";
@@ -61,6 +61,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
 
   try {
     await connectToDatabase();
+    await ensurePsalmistIndexes();
 
     const existing = await Psalmist.findById(id).lean();
     if (!existing) {
@@ -142,12 +143,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     }
 
     return NextResponse.json({ message: "Psalmist assignment updated successfully." }, { status: 200 });
-  } catch (error) {
-    const code = typeof error === "object" && error && "code" in error ? Number((error as { code?: number }).code) : 0;
-    if (code === 11000) {
-      return NextResponse.json({ message: "A psalmist assignment already exists for that date." }, { status: 409 });
-    }
-
+  } catch {
     return NextResponse.json({ message: "Unable to update psalmist assignment." }, { status: 500 });
   }
 }

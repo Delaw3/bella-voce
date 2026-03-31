@@ -10,7 +10,7 @@ import {
   serializePsalmistItem,
 } from "@/lib/psalmist";
 import { notifyUser } from "@/lib/push-notifications";
-import Psalmist from "@/models/psalmist.model";
+import Psalmist, { ensurePsalmistIndexes } from "@/models/psalmist.model";
 import User from "@/models/user.model";
 import mongoose from "mongoose";
 import { NextResponse } from "next/server";
@@ -107,6 +107,7 @@ export async function POST(request: Request) {
 
   try {
     await connectToDatabase();
+    await ensurePsalmistIndexes();
 
     const selectedUser = await User.findOne({ _id: userId, status: { $ne: "DELETED" } })
       .select("firstName lastName")
@@ -149,12 +150,7 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({ message: "Psalmist assignment created successfully." }, { status: 201 });
-  } catch (error) {
-    const code = typeof error === "object" && error && "code" in error ? Number((error as { code?: number }).code) : 0;
-    if (code === 11000) {
-      return NextResponse.json({ message: "A psalmist assignment already exists for that date." }, { status: 409 });
-    }
-
+  } catch {
     return NextResponse.json({ message: "Unable to create psalmist assignment." }, { status: 500 });
   }
 }
