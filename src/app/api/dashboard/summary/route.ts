@@ -1,5 +1,5 @@
 import { requireAuthenticatedUser } from "@/lib/auth-api";
-import { calculateUserAccountability, checkUserDebt } from "@/lib/accountability";
+import { calculateUserAccountability, checkUserDebt, getMonthlyDuesStatus } from "@/lib/accountability";
 import { CACHE_TTL, remember } from "@/lib/cache";
 import { cacheKeys } from "@/lib/cache-keys";
 import { connectToDatabase } from "@/lib/mongodb";
@@ -36,7 +36,7 @@ export async function GET() {
         const startOfYear = new Date(Date.UTC(currentYear, 0, 1));
         const startOfNextYear = new Date(Date.UTC(currentYear + 1, 0, 1));
 
-        const [notifications, unreadNotificationCount, activeAlert, excusePreview, attendanceRecords, userRecord] = await Promise.all([
+        const [notifications, unreadNotificationCount, activeAlert, excusePreview, attendanceRecords, userRecord, duesStatus] = await Promise.all([
           Notification.find().where("userId").equals(actorId).sort({ createdAt: -1 }).limit(5).lean(),
           Notification.countDocuments().where("userId").equals(actorId).where("isRead").equals(false),
           Notification.findOne().where("userId").equals(actorId).where("type").equals("ALERT").where("isRead").equals(false).sort({ createdAt: -1 }).lean(),
@@ -46,6 +46,7 @@ export async function GET() {
             date: { $gte: startOfYear, $lt: startOfNextYear },
           } as never).lean(),
           User.findById(actorId).select("createdAt").lean(),
+          getMonthlyDuesStatus(actorId, currentYear),
         ]);
 
         const validAttendanceRecords = attendanceRecords.filter((item) => {
@@ -59,9 +60,7 @@ export async function GET() {
         const attendanceRate = validAttendanceRecords.length
           ? Math.round((attendancePresentCount / validAttendanceRecords.length) * 100)
           : 0;
-        const duesClearedThisYear = accountability.details.monthlyDues.filter(
-          (item) => item.status === "PAID" && item.paidAt && new Date(item.paidAt).getUTCFullYear() === currentYear,
-        ).length;
+        const duesClearedThisYear = duesStatus.filter((item) => item.status === "PAID").length;
 
         return {
           debt: {
