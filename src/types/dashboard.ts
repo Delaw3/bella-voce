@@ -96,6 +96,11 @@ export type MemberItem = {
 export type DashboardSummaryResponse = {
   debt: DebtBreakdown;
   debtDetails: DebtDetailBreakdown;
+  dashboardMetrics?: {
+    duesClearedThisYear: number;
+    attendanceRate: number;
+    memberSince?: string;
+  };
   notifications: NotificationItem[];
   activeAlert: NotificationItem | null;
   unreadNotificationCount: number;

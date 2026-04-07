@@ -20,13 +20,13 @@ export default async function SongSelectionDetailsPage({ params }: SongSelection
   }
 
   return (
-    <main className="min-h-screen bg-[var(--color-bg)] px-4 py-6 sm:px-6">
+    <main className="dashboard-feature-page min-h-screen bg-[var(--color-bg)] px-4 py-6 sm:px-6">
       <section className="container-shell max-w-4xl space-y-4">
         <div className="flex items-center justify-between">
-          <h1 className="font-display text-2xl text-[#1F2937]">Song Selection Details</h1>
+          <h1 className="dashboard-feature-title font-display text-2xl">Song Selection Details</h1>
           <Link
             href="/dashboard/song-selections"
-            className="rounded-xl border border-[#9FD6D5] bg-white px-4 py-2 text-sm font-medium text-[#1E8C8A] transition hover:bg-[#EAF9F8]"
+            className="dashboard-feature-close rounded-xl border border-[#9FD6D5] bg-white px-4 py-2 text-sm font-medium text-[#1E8C8A] transition hover:bg-[#EAF9F8]"
           >
             Back
           </Link>

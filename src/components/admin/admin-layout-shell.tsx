@@ -210,34 +210,36 @@ export function AdminLayoutShell({ role, permissions, firstName, children }: Adm
           </section>
         </div>
 
-        <nav
-          className={[
-            "admin-bottom-nav fixed inset-x-0 bottom-0 z-50 border-t px-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-3 shadow-[0_-14px_30px_rgba(31,41,55,0.08)] backdrop-blur md:hidden",
-            resolvedTheme === "dark"
-              ? "border-[#9FD6D5]/40 bg-[#0b1320]/95"
-              : "border-[#9FD6D5]/70 bg-white/95",
-          ].join(" ")}
-        >
-          <div className="mx-auto grid max-w-lg grid-cols-5 gap-2">
-            {mainItems.map((item) => {
-              const isActive = pathname === item.href;
-              return (
-                <LoadingNavButton
-                  key={item.href}
-                  href={item.href}
-                  disabled={isActive}
-                  loadingText={`Opening ${item.label}...`}
-                  className={`flex flex-col items-center justify-center rounded-2xl px-2 py-2 text-[11px] font-semibold transition ${
-                    isActive
-                      ? "admin-bottom-nav-active cursor-default bg-[#EAF9F8] text-[#1E8C8A]"
-                      : "admin-bottom-nav-idle text-slate-500"
-                  }`}
-                >
-                  <AdminFeatureIcon icon={item.icon} />
-                  <span className="mt-1">{item.label}</span>
-                </LoadingNavButton>
-              );
-            })}
+        <nav className="fixed inset-x-0 bottom-0 z-50 px-4 pb-[calc(env(safe-area-inset-bottom)+0.9rem)] pt-3 md:hidden">
+          <div
+            className={[
+              "admin-bottom-nav mx-auto max-w-lg rounded-[30px] border p-2 shadow-[0_-8px_30px_rgba(15,107,104,0.10)] backdrop-blur",
+              resolvedTheme === "dark"
+                ? "border-[#9FD6D5]/40 bg-[#0b1320]/95"
+                : "border-[#9FD6D5]/70 bg-white/95",
+            ].join(" ")}
+          >
+            <div className="grid grid-cols-5 gap-1.5">
+              {mainItems.map((item) => {
+                const isActive = pathname === item.href;
+                return (
+                  <LoadingNavButton
+                    key={item.href}
+                    href={item.href}
+                    disabled={isActive}
+                    loadingText={`Opening ${item.label}...`}
+                    className={`flex min-h-[60px] flex-col items-center justify-center rounded-2xl px-2 py-2 text-[11px] font-semibold transition ${
+                      isActive
+                        ? "admin-bottom-nav-active cursor-default bg-[#EAF9F8] text-[#1E8C8A] shadow-[0_6px_20px_rgba(31,157,148,0.12)]"
+                        : "admin-bottom-nav-idle text-slate-500"
+                    }`}
+                  >
+                    <AdminFeatureIcon icon={item.icon} />
+                    <span className="mt-1.5">{item.label}</span>
+                  </LoadingNavButton>
+                );
+              })}
+            </div>
           </div>
         </nav>
 

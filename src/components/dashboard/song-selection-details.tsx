@@ -56,7 +56,7 @@ export function SongSelectionDetails({ id }: SongSelectionDetailsProps) {
   }, [id]);
 
   if (isLoading) {
-    return <p className="text-sm text-slate-600">Loading selection details...</p>;
+    return <p className="dashboard-feature-copy text-sm">Loading selection details...</p>;
   }
 
   if (error) {
@@ -65,7 +65,7 @@ export function SongSelectionDetails({ id }: SongSelectionDetailsProps) {
 
   if (!selection) {
     return (
-      <p className="rounded-xl border border-dashed border-slate-200 bg-white px-4 py-8 text-sm text-slate-500">
+      <p className="dashboard-feature-empty rounded-xl border border-dashed px-4 py-8 text-sm">
         No details available.
       </p>
     );
@@ -73,21 +73,21 @@ export function SongSelectionDetails({ id }: SongSelectionDetailsProps) {
 
   return (
     <section className="space-y-4">
-      <div className="rounded-2xl border border-[#9FD6D5]/70 bg-white p-4 shadow-[0_10px_24px_rgba(31,41,55,0.06)]">
-        <h1 className="font-display text-3xl text-[#1F2937]">{selection.title}</h1>
-        <p className="mt-1 text-sm text-slate-600">{formatAppDate(selection.selectionDate)}</p>
+      <div className="dashboard-feature-card rounded-2xl border border-[#9FD6D5]/70 bg-white p-4 shadow-[0_10px_24px_rgba(31,41,55,0.06)]">
+        <h1 className="dashboard-feature-title font-display text-3xl">{selection.title}</h1>
+        <p className="dashboard-feature-copy mt-1 text-sm">{formatAppDate(selection.selectionDate)}</p>
       </div>
 
       <div className="space-y-1.5">
         {selection.songs.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-slate-200 bg-white px-4 py-8 text-sm text-slate-500">
+          <p className="dashboard-feature-empty rounded-xl border border-dashed px-4 py-8 text-sm">
             No songs listed for this selection.
           </p>
         ) : (
           selection.songs.map((songItem, index) => (
             <article
               key={`${songItem.part}-${songItem.song}-${index}`}
-              className="rounded-2xl bg-[#F8FAFA] p-4"
+              className="dashboard-feature-subtle rounded-2xl border border-transparent bg-[#F8FAFA] p-4"
             >
               {songItem.part ? (
                 <p className="text-[11px] font-semibold tracking-[0.08em] text-[#2CA6A4] uppercase">
@@ -95,7 +95,7 @@ export function SongSelectionDetails({ id }: SongSelectionDetailsProps) {
                 </p>
               ) : null}
               <div className="mt-1 flex items-center justify-between gap-3">
-                <p className="min-w-0 flex-1 text-sm font-semibold text-[#1F2937]">{songItem.song}</p>
+                <p className="dashboard-feature-title min-w-0 flex-1 text-sm font-semibold">{songItem.song}</p>
                 {songItem.key ? (
                   <span className="inline-flex shrink-0 rounded-full bg-[#EAF9F8] px-2 py-0.5 text-[11px] font-semibold text-[#1E8C8A]">
                     Key: {songItem.key}

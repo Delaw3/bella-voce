@@ -1,7 +1,8 @@
 "use client";
 
 import { lockBodyScroll } from "@/lib/body-scroll-lock";
-import { useEffect } from "react";
+import { createPortal } from "react-dom";
+import { useEffect, useState } from "react";
 
 type ActionModalProps = {
   open: boolean;
@@ -26,13 +27,20 @@ export function ActionModal({
   tone = "default",
   isProcessing = false,
 }: ActionModalProps) {
+  const [isMounted, setIsMounted] = useState(false);
+
   useEffect(() => {
     if (!open) return;
 
     return lockBodyScroll();
   }, [open]);
 
-  if (!open) return null;
+  useEffect(() => {
+    setIsMounted(true);
+    return () => setIsMounted(false);
+  }, []);
+
+  if (!open || !isMounted) return null;
 
   const confirmClassName =
     tone === "danger"
@@ -48,7 +56,7 @@ export function ActionModal({
         ? "bg-emerald-50 text-emerald-600"
         : "bg-[#EAF9F8] text-[#1E8C8A]";
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#1F2937]/45 p-4 backdrop-blur-[2px]">
       <div className="w-full max-w-md rounded-[28px] border border-[#9FD6D5]/70 bg-white p-5 shadow-[0_28px_60px_rgba(31,41,55,0.22)]">
         <div className={`inline-flex h-11 w-11 items-center justify-center rounded-2xl ${iconClassName}`}>
@@ -87,6 +95,7 @@ export function ActionModal({
           ) : null}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

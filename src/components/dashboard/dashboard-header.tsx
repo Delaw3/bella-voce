@@ -2,7 +2,8 @@
 
 import { ProfileAvatar } from "@/components/ui/profile-avatar";
 import { capitalizeWords, formatInitials } from "@/lib/utils";
-import { useEffect, useRef, useState } from "react";
+import { Bell, LockKeyhole, LogOut, Menu, Palette, PencilLine } from "lucide-react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 
 type DashboardHeaderProps = {
   firstName?: string;
@@ -18,20 +19,24 @@ type DashboardHeaderProps = {
   isLoggingOut?: boolean;
 };
 
-function BellIcon() {
+function HeaderActionButton({
+  label,
+  onClick,
+  children,
+}: {
+  label: string;
+  onClick: () => void;
+  children: ReactNode;
+}) {
   return (
-    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
-      <path d="M15 17h5l-1.4-1.4a2 2 0 0 1-.6-1.4V11a6 6 0 1 0-12 0v3.2a2 2 0 0 1-.6 1.4L4 17h5" />
-      <path d="M9.5 17a2.5 2.5 0 0 0 5 0" />
-    </svg>
-  );
-}
-
-function MenuIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
-      <path d="M4 7h16M4 12h16M4 17h16" />
-    </svg>
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      className="relative inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/30 bg-white/16 text-white shadow-[0_8px_20px_rgba(15,107,104,0.14)] backdrop-blur-md transition hover:bg-white/24 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
+    >
+      {children}
+    </button>
   );
 }
 
@@ -65,66 +70,73 @@ export function DashboardHeader({
 
   const displayName = firstName ? capitalizeWords(firstName) : "User";
   const displayChoirLevel = choirLevel ? capitalizeWords(choirLevel) : "Member";
-
   return (
-    <header className="rounded-2xl border border-[#9FD6D5]/70 bg-[#2CA6A4] px-4 py-3 shadow-[0_12px_30px_rgba(31,41,55,0.08)]">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={onAvatarClick}
-            aria-label="Open profile details"
-            className="rounded-full transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2CA6A4]/50"
-          >
+    <header className="relative overflow-visible rounded-[28px] border border-[#BFE5E1]/70 bg-[linear-gradient(135deg,#1F9D94_0%,#167F78_100%)] px-4 py-4 text-white shadow-[0_14px_36px_rgba(15,107,104,0.18)]">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-white/12 blur-2xl" />
+        <div className="absolute bottom-0 left-0 h-28 w-28 rounded-full bg-[#DDF4F2]/18 blur-2xl" />
+        <div className="absolute inset-y-0 right-5 hidden w-24 rotate-12 bg-[linear-gradient(180deg,transparent_0%,rgba(255,255,255,0.08)_50%,transparent_100%)] sm:block" />
+        <div
+          className="absolute inset-0 opacity-15"
+          style={{
+            backgroundImage: "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.55) 1px, transparent 0)",
+            backgroundSize: "16px 16px",
+          }}
+        />
+      </div>
+
+      <div className="relative flex items-start justify-between gap-3">
+        <button
+          type="button"
+          onClick={onAvatarClick}
+          aria-label="Open profile details"
+          className="min-w-0 flex-1 text-left"
+        >
+          <div className="flex items-start gap-3">
             <ProfileAvatar
               src={profilePicture}
               alt={`${displayName} profile`}
               initials={formatInitials(displayName)}
-              size={40}
-              className="h-10 w-10 border border-white/30"
-              fallbackClassName="border-white/30 bg-white/15 text-white"
+              size={52}
+              className="h-[52px] w-[52px] border-2 border-white/35 shadow-[0_8px_18px_rgba(15,107,104,0.16)]"
+              fallbackClassName="border-white/35 bg-white/18 text-white"
             />
-          </button>
-          <div>
-            <p className="font-display text-xl text-white">{displayName}</p>
-            <p className="text-xs text-white/80">{displayChoirLevel}</p>
+            <div className="min-w-0 pt-1">
+              <p className="text-[1.05rem] font-semibold leading-5 text-white">{displayName}</p>
+              <span className="mt-1 inline-flex rounded-full border border-white/20 bg-white/14 px-2 py-0.5 text-[10px] font-medium leading-4 text-white/85">
+                {displayChoirLevel}
+              </span>
+            </div>
           </div>
-        </div>
+        </button>
 
-        <div className="relative flex items-center gap-2" ref={menuRef}>
-          <button
-            type="button"
-            onClick={onOpenNotifications}
-            className="relative rounded-xl border border-white/30 bg-white/15 p-2 text-white transition hover:bg-white/25"
-            aria-label="Open notifications"
-          >
-            <BellIcon />
+        <div className="relative flex shrink-0 items-center gap-2" ref={menuRef}>
+          <HeaderActionButton label="Open notifications" onClick={onOpenNotifications}>
+            <Bell className="h-5 w-5" strokeWidth={2} />
             {unreadCount > 0 ? (
-              <span className="absolute -top-1 -right-1 inline-flex min-w-4 items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-semibold text-white">
+              <span className="absolute -right-0.5 -top-0.5 inline-flex min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white shadow-[0_4px_10px_rgba(239,68,68,0.35)]">
                 {unreadCount > 99 ? "99+" : unreadCount}
               </span>
             ) : null}
-          </button>
+          </HeaderActionButton>
 
-          <button
-            type="button"
-            onClick={() => setIsMenuOpen((prev) => !prev)}
-            className="rounded-xl border border-white/30 bg-white/15 p-2 text-white transition hover:bg-white/25"
-            aria-label="Open menu"
-          >
-            <MenuIcon />
-          </button>
+          <HeaderActionButton label="Open menu" onClick={() => setIsMenuOpen((prev) => !prev)}>
+            <Menu className="h-5 w-5" strokeWidth={2} />
+          </HeaderActionButton>
 
           {isMenuOpen ? (
-            <div className="absolute top-12 right-0 z-20 w-48 rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg">
+            <div className="dashboard-header-menu absolute right-0 top-14 z-20 w-52 rounded-[24px] border border-[#BFE5E1]/80 bg-white/97 p-2 text-[#1F2937] shadow-[0_20px_40px_rgba(15,107,104,0.14)] backdrop-blur">
               <button
                 type="button"
                 onClick={() => {
                   setIsMenuOpen(false);
                   onOpenEditProfile();
                 }}
-                className="w-full rounded-lg px-3 py-2 text-left text-sm text-[#1F2937] transition hover:bg-[#EAF9F8]"
+                className="dashboard-header-menu-item flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left text-sm font-medium transition hover:bg-[#EEF9F8]"
               >
+                <span className="dashboard-header-menu-icon inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-[#EEF9F8] text-[#0F6B68]">
+                  <PencilLine className="h-4 w-4" />
+                </span>
                 Edit Profile
               </button>
               <button
@@ -133,8 +145,11 @@ export function DashboardHeader({
                   setIsMenuOpen(false);
                   onOpenTheme();
                 }}
-                className="w-full rounded-lg px-3 py-2 text-left text-sm text-[#1F2937] transition hover:bg-[#EAF9F8]"
+                className="dashboard-header-menu-item flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left text-sm font-medium transition hover:bg-[#EEF9F8]"
               >
+                <span className="dashboard-header-menu-icon inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-[#EEF9F8] text-[#0F6B68]">
+                  <Palette className="h-4 w-4" />
+                </span>
                 Change Theme
               </button>
               <button
@@ -143,8 +158,11 @@ export function DashboardHeader({
                   setIsMenuOpen(false);
                   onOpenChangePassword();
                 }}
-                className="w-full rounded-lg px-3 py-2 text-left text-sm text-[#1F2937] transition hover:bg-[#EAF9F8]"
+                className="dashboard-header-menu-item flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left text-sm font-medium transition hover:bg-[#EEF9F8]"
               >
+                <span className="dashboard-header-menu-icon inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-[#EEF9F8] text-[#0F6B68]">
+                  <LockKeyhole className="h-4 w-4" />
+                </span>
                 Change Password
               </button>
               <button
@@ -154,8 +172,11 @@ export function DashboardHeader({
                   onLogout();
                 }}
                 disabled={isLoggingOut}
-                className="w-full rounded-lg px-3 py-2 text-left text-sm text-red-600 transition hover:bg-red-50 disabled:opacity-70"
+                className="dashboard-header-menu-item flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left text-sm font-medium text-red-600 transition hover:bg-red-50 disabled:opacity-70"
               >
+                <span className="dashboard-header-menu-icon inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-red-50 text-red-600">
+                  <LogOut className="h-4 w-4" />
+                </span>
                 {isLoggingOut ? "Logging out..." : "Logout"}
               </button>
             </div>

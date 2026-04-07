@@ -3,8 +3,11 @@ import { calculateUserAccountability, checkUserDebt } from "@/lib/accountability
 import { CACHE_TTL, remember } from "@/lib/cache";
 import { cacheKeys } from "@/lib/cache-keys";
 import { connectToDatabase } from "@/lib/mongodb";
+import { normalizeAttendanceState } from "@/models/attendance.model";
+import Attendance from "@/models/attendance.model";
 import Excuse from "@/models/excuse.model";
 import Notification from "@/models/notification.model";
+import User from "@/models/user.model";
 import mongoose from "mongoose";
 import { NextResponse } from "next/server";
 
@@ -30,13 +33,35 @@ export async function GET() {
         const accountability = await calculateUserAccountability(actorId, currentYear);
 
         await connectToDatabase();
+        const startOfYear = new Date(Date.UTC(currentYear, 0, 1));
+        const startOfNextYear = new Date(Date.UTC(currentYear + 1, 0, 1));
 
-        const [notifications, unreadNotificationCount, activeAlert, excusePreview] = await Promise.all([
+        const [notifications, unreadNotificationCount, activeAlert, excusePreview, attendanceRecords, userRecord] = await Promise.all([
           Notification.find().where("userId").equals(actorId).sort({ createdAt: -1 }).limit(5).lean(),
           Notification.countDocuments().where("userId").equals(actorId).where("isRead").equals(false),
           Notification.findOne().where("userId").equals(actorId).where("type").equals("ALERT").where("isRead").equals(false).sort({ createdAt: -1 }).lean(),
           Excuse.find().where("userId").equals(actorId).sort({ createdAt: -1 }).limit(3).lean(),
+          Attendance.find({
+            userId: actorId,
+            date: { $gte: startOfYear, $lt: startOfNextYear },
+          } as never).lean(),
+          User.findById(actorId).select("createdAt").lean(),
         ]);
+
+        const validAttendanceRecords = attendanceRecords.filter((item) => {
+          const state = normalizeAttendanceState(item);
+          return state.present || state.late || state.absent || state.excused;
+        });
+        const attendancePresentCount = validAttendanceRecords.filter((item) => {
+          const state = normalizeAttendanceState(item);
+          return state.present || state.late || state.excused;
+        }).length;
+        const attendanceRate = validAttendanceRecords.length
+          ? Math.round((attendancePresentCount / validAttendanceRecords.length) * 100)
+          : 0;
+        const duesClearedThisYear = accountability.details.monthlyDues.filter(
+          (item) => item.status === "PAID" && item.paidAt && new Date(item.paidAt).getUTCFullYear() === currentYear,
+        ).length;
 
         return {
           debt: {
@@ -55,6 +80,11 @@ export async function GET() {
             pledged: accountability.details.pledged,
             fine: accountability.details.fine,
             levy: accountability.details.levy,
+          },
+          dashboardMetrics: {
+            duesClearedThisYear,
+            attendanceRate,
+            memberSince: userRecord?.createdAt ? new Date(userRecord.createdAt).toISOString() : undefined,
           },
           notifications: notifications.map((item) => ({
             id: item._id.toString(),

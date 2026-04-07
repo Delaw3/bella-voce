@@ -48,6 +48,11 @@ type MarkNotificationsReadPayload = {
   types?: NotificationType[];
 };
 
+type DeleteNotificationsPayload = {
+  id?: string;
+  clearAll?: boolean;
+};
+
 export async function PATCH(request: Request) {
   const user = await requireAuthenticatedUser();
 
@@ -80,5 +85,67 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ message: "Notifications marked as read.", unreadCount }, { status: 200 });
   } catch {
     return NextResponse.json({ message: "Unable to update notifications right now." }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: Request) {
+  const user = await requireAuthenticatedUser();
+
+  if (!user) {
+    return NextResponse.json({ message: "Unauthorized. Please log in." }, { status: 401 });
+  }
+
+  try {
+    let payload: DeleteNotificationsPayload = {};
+    const rawBody = await request.text();
+
+    if (rawBody.trim()) {
+      payload = JSON.parse(rawBody) as DeleteNotificationsPayload;
+    }
+
+    await connectToDatabase();
+    const actorId = new mongoose.Types.ObjectId(user._id.toString());
+
+    if (payload.clearAll) {
+      await Notification.deleteMany({ userId: actorId } as never);
+    } else if (payload.id) {
+      if (!mongoose.Types.ObjectId.isValid(payload.id)) {
+        return NextResponse.json({ message: "Invalid notification id." }, { status: 400 });
+      }
+
+      await Notification.deleteOne({
+        _id: new mongoose.Types.ObjectId(payload.id),
+        userId: actorId,
+      } as never);
+    } else {
+      return NextResponse.json({ message: "Provide a notification id or clearAll flag." }, { status: 400 });
+    }
+
+    await invalidateUserNotificationsCache(user._id.toString());
+
+    const [notifications, unreadCount] = await Promise.all([
+      Notification.find().where("userId").equals(actorId).sort({ createdAt: -1 }).lean(),
+      Notification.countDocuments().where("userId").equals(actorId).where("isRead").equals(false),
+    ]);
+
+    return NextResponse.json(
+      {
+        message: payload.clearAll ? "Notifications cleared." : "Notification deleted.",
+        unreadCount,
+        notifications: notifications.map((item) => ({
+          id: item._id.toString(),
+          title: item.title,
+          message: item.message,
+          type: item.type,
+          isRead: item.isRead,
+          createdAt: item.createdAt.toISOString(),
+          route: item.route ?? "",
+          metadata: item.metadata ?? undefined,
+        })),
+      },
+      { status: 200 },
+    );
+  } catch {
+    return NextResponse.json({ message: "Unable to delete notifications right now." }, { status: 500 });
   }
 }

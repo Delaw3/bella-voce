@@ -14,12 +14,13 @@ import { DashboardSheet } from "@/components/dashboard/dashboard-sheet";
 import { EditProfileForm } from "@/components/dashboard/edit-profile-form";
 import { ExcusePanel } from "@/components/dashboard/excuse-panel";
 import { DashboardFeatureKey, FeatureGrid } from "@/components/dashboard/feature-grid";
-import { GreetingCard } from "@/components/dashboard/greeting-card";
+import { AccountabilityCard } from "@/components/dashboard/greeting-card";
 import { MembersPanel } from "@/components/dashboard/members-panel";
 import { MonthlyDuesPanel } from "@/components/dashboard/monthly-dues-panel";
 import { NotificationsPanel } from "@/components/dashboard/notifications-panel";
 import { NotificationPollingBridge } from "@/components/notification-polling-bridge";
 import { ProfilePanel } from "@/components/dashboard/profile-panel";
+import { StatsSummary } from "@/components/dashboard/stats-summary";
 import { TotalOwedCard } from "@/components/dashboard/total-owed-card";
 import { ActionModal } from "@/components/ui/action-modal";
 import {
@@ -56,6 +57,11 @@ const defaultSummary: DashboardSummaryResponse = {
     pledged: [],
     fine: [],
     levy: [],
+  },
+  dashboardMetrics: {
+    duesClearedThisYear: 0,
+    attendanceRate: 0,
+    memberSince: undefined,
   },
   notifications: [],
   activeAlert: null,
@@ -198,6 +204,7 @@ export function UserDashboard({ firstName, role }: UserDashboardProps) {
       setSummary({
         debt: summaryPayload.debt ?? defaultSummary.debt,
         debtDetails: summaryPayload.debtDetails ?? defaultSummary.debtDetails,
+        dashboardMetrics: summaryPayload.dashboardMetrics ?? defaultSummary.dashboardMetrics,
         notifications: summaryPayload.notifications ?? [],
         activeAlert: summaryPayload.activeAlert ?? null,
         unreadNotificationCount: Number(summaryPayload.unreadNotificationCount || 0),
@@ -558,6 +565,18 @@ export function UserDashboard({ firstName, role }: UserDashboardProps) {
   const homeHint = useMemo(() => "Tap any feature to open details.", []);
   const showPullRefresh = pullDistance > 0 || isPullRefreshing;
   const showDashboardPushPrompt = isPushSupported && pushPermission === "default" && !isPushPromptDismissed;
+  const duesClearedThisYear = summary.dashboardMetrics?.duesClearedThisYear ?? 0;
+  const attendanceRate = summary.dashboardMetrics?.attendanceRate ?? 0;
+  const memberSince = useMemo(() => {
+    if (summary.dashboardMetrics?.memberSince) {
+      return new Date(summary.dashboardMetrics.memberSince).toLocaleDateString("en-NG", {
+        month: "short",
+        year: "numeric",
+      });
+    }
+
+    return "Jan 2024";
+  }, [summary.dashboardMetrics?.memberSince]);
 
   function rememberDismissedAlert(alertId: string) {
     dismissedAlertIdsRef.current.add(alertId);
@@ -595,9 +614,18 @@ export function UserDashboard({ firstName, role }: UserDashboardProps) {
     }
   }
 
+  function handleNotificationsPanelChange(payload: { notifications: NotificationItem[]; unreadCount: number }) {
+    setNotifications(payload.notifications);
+    setSummary((current) => ({
+      ...current,
+      notifications: payload.notifications.slice(0, 5),
+      unreadNotificationCount: payload.unreadCount,
+    }));
+  }
+
   return (
     <main
-      className="min-h-screen bg-[var(--color-bg)] px-3 py-4 pb-28 sm:px-5 md:pb-6"
+      className="min-h-screen bg-[#F7FAFA] px-4 pt-4 pb-24 md:pb-6"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
@@ -629,7 +657,7 @@ export function UserDashboard({ firstName, role }: UserDashboardProps) {
         </div>
       </div>
 
-      <section className="mx-auto w-full max-w-md space-y-4 sm:max-w-4xl">
+      <section className="mx-auto w-full max-w-md space-y-5 sm:max-w-4xl">
         <NotificationPollingBridge
           enabled
           seedNotifications={notifications}
@@ -673,15 +701,15 @@ export function UserDashboard({ firstName, role }: UserDashboardProps) {
         </div>
 
         <div
-          className="space-y-4 transition-transform duration-200 ease-out"
+          className="space-y-5 transition-transform duration-200 ease-out"
           style={{ transform: `translateY(${pullDistance}px)` }}
         >
           {showDashboardPushPrompt ? (
-            <div className="rounded-2xl border border-[#9FD6D5]/80 bg-[linear-gradient(135deg,#ffffff_0%,#eef8f7_100%)] px-4 py-4 shadow-[0_10px_24px_rgba(31,41,55,0.08)]">
+            <div className="dashboard-push-prompt rounded-[28px] border border-[#BFE5E1]/60 bg-[linear-gradient(135deg,#ffffff_0%,#eef8f7_100%)] px-4 py-4 shadow-[0_8px_30px_rgba(15,107,104,0.08)]">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold text-[#1F2937]">Turn on app notifications</p>
-                  <p className="mt-1 text-sm text-slate-600">
+                  <p className="dashboard-push-prompt-title text-sm font-semibold text-[#1F2937]">Turn on app notifications</p>
+                  <p className="dashboard-push-prompt-copy mt-1 text-sm text-[#5B6575]">
                     Get instant alerts for complaint replies, excuse decisions, payments, dues updates, and song posts.
                   </p>
                 </div>
@@ -693,7 +721,7 @@ export function UserDashboard({ firstName, role }: UserDashboardProps) {
                       window.localStorage.setItem(PUSH_PROMPT_DISMISSED_STORAGE_KEY, "1");
                     }
                   }}
-                  className="rounded-xl border border-[#9FD6D5] p-2 text-[#1E8C8A] transition hover:bg-[#EAF9F8]"
+                  className="dashboard-push-prompt-dismiss rounded-xl border border-[#BFE5E1] p-2 text-[#0F6B68] transition hover:bg-[#EEF9F8]"
                   aria-label="Dismiss notification permission prompt"
                 >
                   <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -706,7 +734,7 @@ export function UserDashboard({ firstName, role }: UserDashboardProps) {
                 <button
                   type="button"
                   onClick={() => window.dispatchEvent(new Event("bella-voce-enable-push"))}
-                  className="rounded-2xl bg-[#2CA6A4] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#1E8C8A]"
+                  className="dashboard-push-prompt-primary rounded-2xl bg-[#1F9D94] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#167F78]"
                 >
                   Enable Notifications
                 </button>
@@ -715,7 +743,7 @@ export function UserDashboard({ firstName, role }: UserDashboardProps) {
                   onClick={() => {
                     setActiveSheet("notifications");
                   }}
-                  className="rounded-2xl border border-[#9FD6D5] px-4 py-2.5 text-sm font-semibold text-[#1E8C8A] transition hover:bg-[#EAF9F8]"
+                  className="dashboard-push-prompt-secondary rounded-2xl border border-[#BFE5E1] px-4 py-2.5 text-sm font-semibold text-[#0F6B68] transition hover:bg-[#EEF9F8]"
                 >
                   View Notifications
                 </button>
@@ -734,21 +762,21 @@ export function UserDashboard({ firstName, role }: UserDashboardProps) {
                 }
                 setLiveNotification(null);
               }}
-              className="w-full rounded-2xl border border-[#9FD6D5]/80 bg-white px-4 py-3 text-left shadow-[0_10px_24px_rgba(31,41,55,0.08)] transition hover:bg-[#F8FAFA]"
+              className="w-full rounded-[28px] border border-[#BFE5E1]/60 bg-white px-4 py-4 text-left shadow-[0_8px_30px_rgba(15,107,104,0.08)] transition hover:bg-[#FCFEFE]"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-[#1F2937]">{liveNotification.title}</p>
-                  <p className="mt-1 text-sm text-slate-600">{liveNotification.message}</p>
+                  <p className="mt-1 text-sm text-[#5B6575]">{liveNotification.message}</p>
                 </div>
-                <span className="rounded-full bg-[#EAF9F8] px-2 py-1 text-[11px] font-semibold text-[#1E8C8A]">
+                <span className="rounded-full bg-[#EEF9F8] px-2 py-1 text-[11px] font-semibold text-[#0F6B68]">
                   New
                 </span>
               </div>
             </button>
           ) : null}
 
-          <GreetingCard
+          <AccountabilityCard
             totalOwed={summary.debt.totalOwed}
             canAccessAdmin={role === "ADMIN" || role === "SUPER_ADMIN"}
             onOpenOwed={() =>
@@ -761,6 +789,12 @@ export function UserDashboard({ firstName, role }: UserDashboardProps) {
                 router.push("/dashboard/pay");
               }, "Opening Payment...", { routeTarget: "/dashboard/pay" })
             }
+          />
+
+          <StatsSummary
+            duesClearedThisYear={duesClearedThisYear}
+            attendanceRate={attendanceRate}
+            memberSince={memberSince}
           />
 
           <FeatureGrid onOpenFeature={openFeature} />
@@ -777,7 +811,7 @@ export function UserDashboard({ firstName, role }: UserDashboardProps) {
           <p className="hidden text-center text-xs text-slate-500 md:block">{homeHint}</p>
 
           {isLoading ? (
-            <p className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600">
+            <p className="rounded-2xl border border-[#BFE5E1]/60 bg-white px-4 py-3 text-sm text-[#5B6575]">
               Loading dashboard...
             </p>
           ) : null}
@@ -800,7 +834,10 @@ export function UserDashboard({ firstName, role }: UserDashboardProps) {
         title="Notifications"
         onClose={() => setActiveSheet(null)}
       >
-        <NotificationsPanel notifications={notifications} />
+        <NotificationsPanel
+          notifications={notifications}
+          onNotificationsChange={handleNotificationsPanelChange}
+        />
       </DashboardSheet>
 
       <DashboardSheet
