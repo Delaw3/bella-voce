@@ -25,6 +25,7 @@ export function AdminLayoutShell({ role, permissions, firstName, children }: Adm
   const { resolvedTheme } = useTheme();
   const pathname = usePathname();
   const router = useRouter();
+  const mainScrollRef = useRef<HTMLElement | null>(null);
   const pullStartYRef = useRef<number | null>(null);
   const isPullTrackingRef = useRef(false);
   const mainItems = ADMIN_MAIN_NAV_ITEMS.filter((item) => hasPermissionValue(role, permissions, item.permission));
@@ -56,7 +57,13 @@ export function AdminLayoutShell({ role, permissions, firstName, children }: Adm
   }
 
   function handleTouchStart(event: TouchEvent<HTMLElement>) {
-    if (!canUsePullRefresh || confirmBackOpen || isLeavingAdmin || isPullRefreshing || window.scrollY > 0) {
+    if (
+      !canUsePullRefresh ||
+      confirmBackOpen ||
+      isLeavingAdmin ||
+      isPullRefreshing ||
+      (mainScrollRef.current?.scrollTop ?? 0) > 0
+    ) {
       pullStartYRef.current = null;
       isPullTrackingRef.current = false;
       return;
@@ -72,7 +79,7 @@ export function AdminLayoutShell({ role, permissions, firstName, children }: Adm
       !isPullTrackingRef.current ||
       pullStartYRef.current === null ||
       confirmBackOpen ||
-      window.scrollY > 0
+      (mainScrollRef.current?.scrollTop ?? 0) > 0
     ) {
       return;
     }
@@ -109,8 +116,9 @@ export function AdminLayoutShell({ role, permissions, firstName, children }: Adm
   return (
     <AdminSessionProvider value={{ role, permissions, firstName }}>
       <main
+        ref={mainScrollRef}
         className={[
-          "admin-shell min-h-screen text-[#1F2937]",
+          "admin-shell h-screen overflow-x-clip overflow-y-auto text-[#1F2937]",
           resolvedTheme === "dark"
             ? "bg-[linear-gradient(180deg,#0b1320_0%,#122031_100%)] text-slate-100"
             : "bg-[linear-gradient(180deg,#F8FAFA_0%,#EEF8F7_100%)]",
@@ -149,7 +157,8 @@ export function AdminLayoutShell({ role, permissions, firstName, children }: Adm
         </div>
 
         <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-3 pb-24 pt-4 sm:px-5 sm:pb-6 sm:pt-5">
-          <header className="admin-shell-header sticky top-3 z-40 rounded-[30px] border border-[#9FD6D5]/70 bg-[linear-gradient(135deg,#2CA6A4_0%,#1E8C8A_100%)] px-4 py-5 text-white shadow-[0_20px_45px_rgba(31,41,55,0.16)] sm:px-6">
+          <div className="fixed left-1/2 top-3 z-40 w-[calc(100%-1.5rem)] max-w-7xl -translate-x-1/2 px-3 sm:top-4 sm:w-[calc(100%-2.5rem)] sm:px-5">
+            <header className="admin-shell-header rounded-[30px] border border-[#9FD6D5]/70 bg-[linear-gradient(135deg,#2CA6A4_0%,#1E8C8A_100%)] px-4 py-5 text-white shadow-[0_20px_45px_rgba(31,41,55,0.16)] sm:px-6">
             <div className="flex flex-col gap-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
@@ -200,10 +209,11 @@ export function AdminLayoutShell({ role, permissions, firstName, children }: Adm
                 })}
               </div>
             </div>
-          </header>
+            </header>
+          </div>
 
           <section
-            className="flex-1 py-4 transition-transform duration-200 ease-out"
+            className="flex-1 py-4 pt-40 transition-transform duration-200 ease-out sm:pt-44"
             style={contentTransform ? { transform: contentTransform } : undefined}
           >
             {children}

@@ -2,6 +2,15 @@
 
 import { formatNaira } from "@/lib/naira";
 import {
+  AlertTriangle,
+  BadgeAlert,
+  CalendarDays,
+  ChevronDown,
+  Clock3,
+  HandCoins,
+  ShieldAlert,
+} from "lucide-react";
+import {
   DebtAdjustmentDetail,
   DebtAttendanceDetail,
   DebtBreakdown,
@@ -17,13 +26,18 @@ type TotalOwedCardProps = {
 
 type OwedRowKey = Exclude<keyof DebtBreakdown, "totalOwed">;
 
-const breakdownRows: Array<{ key: OwedRowKey; label: string }> = [
-  { key: "monthlyDues", label: "Monthly Dues" },
-  { key: "absentFee", label: "Absent Fee" },
-  { key: "latenessFee", label: "Lateness Fee" },
-  { key: "pledged", label: "Pledged" },
-  { key: "fine", label: "Fine" },
-  { key: "levy", label: "Levy" },
+const breakdownRows: Array<{
+  key: OwedRowKey;
+  label: string;
+  icon: typeof CalendarDays;
+  iconClassName: string;
+}> = [
+  { key: "monthlyDues", label: "Monthly Dues", icon: CalendarDays, iconClassName: "text-[#0F6B68]" },
+  { key: "absentFee", label: "Absent Fee", icon: AlertTriangle, iconClassName: "text-[#D97706]" },
+  { key: "latenessFee", label: "Lateness Fee", icon: Clock3, iconClassName: "text-[#C2410C]" },
+  { key: "pledged", label: "Pledged", icon: HandCoins, iconClassName: "text-[#1F9D94]" },
+  { key: "fine", label: "Fine", icon: BadgeAlert, iconClassName: "text-[#DC2626]" },
+  { key: "levy", label: "Levy", icon: ShieldAlert, iconClassName: "text-[#7C3AED]" },
 ];
 
 function sumMonthlyDueOutstanding(items: DebtMonthlyDueDetail[]) {
@@ -181,21 +195,18 @@ export function TotalOwedCard({ debt, details }: TotalOwedCardProps) {
           className="group overflow-hidden rounded-xl border border-slate-100 bg-slate-50 transition open:border-[#9FD6D5] open:bg-[#F8FBFB]"
         >
           <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-3 py-3 text-left transition hover:bg-white/60 [&::-webkit-details-marker]:hidden">
-            <div>
-              <p className="text-sm font-medium text-slate-700">{row.label}</p>
-              <p className="mt-0.5 text-xs text-slate-500">{getRowMeta(row.key)}</p>
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-[#D9EEEE] bg-[#F3FBFB]">
+                <row.icon className={`h-4.5 w-4.5 ${row.iconClassName}`} />
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-slate-700">{row.label}</p>
+                <p className="mt-0.5 text-xs text-slate-500">{getRowMeta(row.key)}</p>
+              </div>
             </div>
             <div className="flex items-center gap-2">
               <p className="text-sm font-semibold text-[#1F2937]">{formatNaira(debt[row.key] as number)}</p>
-              <svg
-                viewBox="0 0 24 24"
-                className="h-4 w-4 text-slate-500 transition group-open:rotate-180"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.8"
-              >
-                <path d="m6 9 6 6 6-6" />
-              </svg>
+              <ChevronDown className="h-4 w-4 text-slate-500 transition group-open:rotate-180" />
             </div>
           </summary>
           <div className="border-t border-slate-100 bg-[#F8FAFA] p-3">
