@@ -115,6 +115,7 @@ type ActiveSheet =
 export function UserDashboard({ firstName, role }: UserDashboardProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const mainScrollRef = useRef<HTMLElement | null>(null);
   const pullStartYRef = useRef<number | null>(null);
   const isPullTrackingRef = useRef(false);
   const dismissedAlertIdsRef = useRef<Set<string>>(new Set());
@@ -528,7 +529,7 @@ export function UserDashboard({ firstName, role }: UserDashboardProps) {
   }
 
   function handleTouchStart(event: TouchEvent<HTMLElement>) {
-    if (activeSheet || isActionLoading || isPullRefreshing || window.scrollY > 0) {
+    if (activeSheet || isActionLoading || isPullRefreshing || (mainScrollRef.current?.scrollTop ?? 0) > 0) {
       pullStartYRef.current = null;
       isPullTrackingRef.current = false;
       return;
@@ -539,7 +540,12 @@ export function UserDashboard({ firstName, role }: UserDashboardProps) {
   }
 
   function handleTouchMove(event: TouchEvent<HTMLElement>) {
-    if (!isPullTrackingRef.current || pullStartYRef.current === null || activeSheet || window.scrollY > 0) {
+    if (
+      !isPullTrackingRef.current ||
+      pullStartYRef.current === null ||
+      activeSheet ||
+      (mainScrollRef.current?.scrollTop ?? 0) > 0
+    ) {
       return;
     }
 
@@ -640,7 +646,12 @@ export function UserDashboard({ firstName, role }: UserDashboardProps) {
 
   return (
     <main
+      ref={mainScrollRef}
       className="h-screen overflow-x-clip overflow-y-auto bg-[#F7FAFA] px-4 pt-4 pb-24 md:pb-6"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      onTouchCancel={handleTouchEnd}
     >
       <div
         className={`pointer-events-none fixed left-1/2 top-4 z-20 transition-all duration-200 ${
