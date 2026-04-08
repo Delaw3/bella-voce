@@ -251,6 +251,15 @@ export function UserDashboard({ firstName, role }: UserDashboardProps) {
   }, []);
 
   useEffect(() => {
+    if (typeof document === "undefined") {
+      return;
+    }
+
+    document.body.style.overflow = "";
+    document.documentElement.style.overflow = "";
+  }, []);
+
+  useEffect(() => {
     if (!liveNotification) {
       return;
     }
@@ -539,6 +548,12 @@ export function UserDashboard({ firstName, role }: UserDashboardProps) {
 
     if (delta <= 0) {
       setPullDistance(0);
+      isPullTrackingRef.current = false;
+      return;
+    }
+
+    if (delta < 16) {
+      setPullDistance(0);
       return;
     }
 
@@ -625,11 +640,7 @@ export function UserDashboard({ firstName, role }: UserDashboardProps) {
 
   return (
     <main
-      className="min-h-screen bg-[#F7FAFA] px-4 pt-4 pb-24 md:pb-6"
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
-      onTouchCancel={handleTouchEnd}
+      className="h-screen overflow-x-clip overflow-y-auto bg-[#F7FAFA] px-4 pt-4 pb-24 md:pb-6"
     >
       <div
         className={`pointer-events-none fixed left-1/2 top-4 z-20 transition-all duration-200 ${
@@ -657,14 +668,14 @@ export function UserDashboard({ firstName, role }: UserDashboardProps) {
         </div>
       </div>
 
-      <section className="mx-auto w-full max-w-md space-y-5 sm:max-w-4xl">
+      <section className="mx-auto w-full max-w-md space-y-5 overflow-x-clip pt-26 sm:max-w-4xl">
         <NotificationPollingBridge
           enabled
           seedNotifications={notifications}
           onSync={handleNotificationSync}
         />
 
-        <div className="sticky top-3 z-30">
+        <div className="fixed left-1/2 top-3 z-30 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 sm:max-w-4xl">
           <DashboardHeader
             firstName={unresolvedFirstName}
             choirLevel={profile?.choirLevel}

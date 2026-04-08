@@ -1,10 +1,10 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 
 type AppLoaderProps = {
-  children: React.ReactNode;
+  children: ReactNode;
 };
 
 export function AppLoader({ children }: AppLoaderProps) {
@@ -35,7 +35,7 @@ export function AppLoader({ children }: AppLoaderProps) {
             className="loader-logo h-auto w-auto max-w-30"
             priority
           />
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3" aria-hidden="true">
             <span className="music-note" style={{ animationDelay: "0ms" }}>
               ♪
             </span>
@@ -46,12 +46,14 @@ export function AppLoader({ children }: AppLoaderProps) {
               ♬
             </span>
           </div>
+          <div className="flex flex-col items-center gap-0.5">
+            <p className="text-xs font-medium tracking-[0.08em] text-[#5B6575]">Powered by</p>
+            <p className="text-sm font-semibold tracking-[0.08em] text-[#1F9D94]">Dexarptech</p>
+          </div>
         </div>
       </div>
 
-      <div className={isLoading ? "opacity-0" : "opacity-100 transition-opacity duration-300"}>
-        {children}
-      </div>
+      <div className={isLoading ? "opacity-0" : "opacity-100 transition-opacity duration-300"}>{children}</div>
     </>
   );
 }

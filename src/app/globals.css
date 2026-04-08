@@ -172,17 +172,17 @@ html[data-theme="dark"] .dashboard-quick-icon {
 }
 
 html[data-theme="dark"] .dashboard-bottom-nav {
-  background-color: rgba(15, 23, 32, 0.94) !important;
-  border-top-color: rgba(159, 214, 213, 0.38) !important;
+  background-color: rgba(15, 107, 104, 0.96) !important;
+  border-top-color: rgba(255, 255, 255, 0.12) !important;
 }
 
 html[data-theme="dark"] .dashboard-bottom-nav-idle {
-  color: #a7b7ca !important;
+  color: #ffffff !important;
 }
 
 html[data-theme="dark"] .dashboard-bottom-nav-active {
-  background-color: rgba(44, 166, 164, 0.16) !important;
-  color: #8fe1df !important;
+  background-color: rgba(255, 255, 255, 0.16) !important;
+  color: #ffffff !important;
 }
 
 html[data-theme="dark"] .dashboard-header-menu {
@@ -411,6 +411,7 @@ html,
 body {
   margin: 0;
   min-height: 100%;
+  overflow-x: hidden;
   overscroll-behavior-y: none;
 }
 
