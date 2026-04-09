@@ -25,6 +25,12 @@ export function ChoirFinanceAdmin() {
     summary: { totalIncome: 0, totalExpenses: 0, balance: 0 },
     entries: [],
     pagination: { page: 1, limit: 10, total: 0, totalPages: 1 },
+    period: {
+      month: new Date().getMonth() + 1,
+      year: new Date().getFullYear(),
+      label: new Date().toLocaleString("en-NG", { month: "long", year: "numeric" }),
+      value: `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, "0")}`,
+    },
   });
   const [form, setForm] = useState(initialForm);
   const [editingId, setEditingId] = useState<string | null>(null);
