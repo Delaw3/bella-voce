@@ -32,6 +32,20 @@ function toPositiveInt(value: string | null, fallback: number): number {
   return Math.floor(parsed);
 }
 
+function parseMonth(value: string | null, fallback: number): number {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed < 1 || parsed > 12) return fallback;
+  return Math.floor(parsed);
+}
+
+function buildPeriodLabel(year: number, month: number): string {
+  return new Date(Date.UTC(year, month - 1, 1)).toLocaleString("en-NG", {
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+}
+
 function parseFinanceDate(input: string): Date | null {
   const parsed = new Date(input);
   if (Number.isNaN(parsed.getTime())) return null;
@@ -46,9 +60,20 @@ export async function GET(request: Request) {
   }
 
   const { searchParams } = new URL(request.url);
+  const now = new Date();
   const page = toPositiveInt(searchParams.get("page"), DEFAULT_PAGE);
   const limit = Math.min(toPositiveInt(searchParams.get("limit"), DEFAULT_LIMIT), MAX_LIMIT);
+  const year = toPositiveInt(searchParams.get("year"), now.getUTCFullYear());
+  const month = parseMonth(searchParams.get("month"), now.getUTCMonth() + 1);
   const skip = (page - 1) * limit;
+  const periodStart = new Date(Date.UTC(year, month - 1, 1, 0, 0, 0, 0));
+  const periodEnd = new Date(Date.UTC(year, month, 1, 0, 0, 0, 0));
+  const financeFilter = {
+    financeDate: {
+      $gte: periodStart,
+      $lt: periodEnd,
+    },
+  };
 
   try {
     await connectToDatabase();
@@ -57,8 +82,9 @@ export async function GET(request: Request) {
       ChoirFinance.aggregate<{ _id: ChoirFinanceType; totalAmount: number }>([
         { $group: { _id: "$type", totalAmount: { $sum: "$amount" } } },
       ]),
-      ChoirFinance.countDocuments(),
+      ChoirFinance.countDocuments(financeFilter),
       ChoirFinance.find()
+        .find(financeFilter)
         .populate("createdBy", "firstName lastName")
         .populate("updatedBy", "firstName lastName")
         .sort({ financeDate: -1, createdAt: -1 })
@@ -96,6 +122,12 @@ export async function GET(request: Request) {
           limit,
           total,
           totalPages,
+        },
+        period: {
+          month,
+          year,
+          label: buildPeriodLabel(year, month),
+          value: `${year}-${String(month).padStart(2, "0")}`,
         },
       },
       { status: 200 },

@@ -15,7 +15,7 @@ export default async function ChoirFinancePage() {
   }
 
   return (
-    <main className="min-h-screen bg-[var(--color-bg)] px-4 py-6 sm:px-6">
+    <main className="h-screen overflow-x-clip overflow-y-auto bg-[var(--color-bg)] px-4 py-6 sm:px-6">
       <section className="container-shell max-w-4xl space-y-4">
         <div className="flex items-center justify-between">
           <div>

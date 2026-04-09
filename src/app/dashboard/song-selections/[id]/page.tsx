@@ -20,7 +20,7 @@ export default async function SongSelectionDetailsPage({ params }: SongSelection
   }
 
   return (
-    <main className="dashboard-feature-page min-h-screen bg-[var(--color-bg)] px-4 py-6 sm:px-6">
+    <main className="dashboard-feature-page h-screen overflow-x-clip overflow-y-auto bg-[var(--color-bg)] px-4 py-6 sm:px-6">
       <section className="container-shell max-w-4xl space-y-4">
         <div className="flex items-center justify-between">
           <h1 className="dashboard-feature-title font-display text-2xl">Song Selection Details</h1>

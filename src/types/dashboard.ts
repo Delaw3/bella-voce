@@ -156,10 +156,18 @@ export type ChoirFinancePagination = {
   totalPages: number;
 };
 
+export type ChoirFinancePeriod = {
+  month: number;
+  year: number;
+  label: string;
+  value: string;
+};
+
 export type ChoirFinanceResponse = {
   summary: ChoirFinanceSummary;
   entries: ChoirFinanceEntry[];
   pagination: ChoirFinancePagination;
+  period: ChoirFinancePeriod;
 };
 
 export type SongSelectionListItem = {
