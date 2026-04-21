@@ -146,6 +146,10 @@ html[data-theme="dark"] .dashboard-owed-eyebrow {
   color: #8fe1df !important;
 }
 
+.dashboard-owed-amount-owed {
+  color: #dc2626 !important;
+}
+
 html[data-theme="dark"] .dashboard-owed-amount,
 html[data-theme="dark"] .dashboard-quick-label,
 html[data-theme="dark"] .dashboard-feature-label {

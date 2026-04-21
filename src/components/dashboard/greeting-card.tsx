@@ -104,7 +104,10 @@ export function AccountabilityCard({
             <button type="button" onClick={onOpenOwed} className="min-w-0 flex-1 text-left">
               <p className="dashboard-owed-eyebrow text-[11px] font-semibold uppercase tracking-[0.18em] text-[#0F6B68]">TOTAL OWED</p>
               <div className="mt-3 flex flex-wrap items-center gap-2">
-                <p className={`dashboard-owed-amount text-[2rem] font-semibold leading-none ${isOwing ? "dashboard-owed-amount-owed text-[#1F2937]" : "text-[#0F6B68]"}`}>
+                <p
+                  className={`dashboard-owed-amount text-[2rem] font-semibold leading-none ${isOwing ? "dashboard-owed-amount-owed !text-red-600" : "text-[#0F6B68]"}`}
+                  style={isOwing ? { color: "#dc2626" } : undefined}
+                >
                   {displayTotalOwed}
                 </p>
               </div>
