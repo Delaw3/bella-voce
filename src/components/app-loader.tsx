@@ -11,18 +11,32 @@ export function AppLoader({ children }: AppLoaderProps) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // Shorter splash: just enough to flash the brand without feeling like a hang.
+    // `pagehide`/`pageshow` guards against the timer being throttled on mobile
+    // bfcache restores, which previously could leave the overlay stuck open.
     const timer = window.setTimeout(() => {
       setIsLoading(false);
-    }, 1600);
+    }, 700);
 
-    return () => window.clearTimeout(timer);
+    function handlePageShow(event: PageTransitionEvent) {
+      if (event.persisted) {
+        setIsLoading(false);
+      }
+    }
+
+    window.addEventListener("pageshow", handlePageShow);
+
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener("pageshow", handlePageShow);
+    };
   }, []);
 
   return (
     <>
       <div
         aria-hidden={!isLoading}
-        className={`fixed inset-0 z-50 flex items-center justify-center bg-[var(--color-bg)] transition-opacity duration-500 ${
+        className={`fixed inset-0 z-50 flex items-center justify-center bg-[var(--color-bg)] transition-opacity duration-300 ${
           isLoading ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
       >

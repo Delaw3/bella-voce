@@ -393,7 +393,7 @@ export function PaymentsAdmin() {
 
       {selectedItem ? (
         <div className="fixed inset-0 z-[90] flex items-end justify-center bg-[#1F2937]/45 p-4 backdrop-blur-[2px] sm:items-center">
-          <div className="flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-[30px] border border-[#9FD6D5]/70 bg-white shadow-[0_28px_60px_rgba(31,41,55,0.22)]">
+          <div className="flex max-h-[90dvh] w-full max-w-3xl flex-col overflow-hidden rounded-[30px] border border-[#9FD6D5]/70 bg-white shadow-[0_28px_60px_rgba(31,41,55,0.22)]">
             <div className="flex items-start justify-between gap-4 border-b border-[#E6F3F2] px-5 py-4">
               <div>
                 <h2 className="text-xl font-semibold text-[#1F2937]">

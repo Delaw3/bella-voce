@@ -120,7 +120,9 @@ export function PaymentsPage() {
   }
 
   return (
-    <main className="dashboard-feature-page min-h-screen bg-[linear-gradient(180deg,#F8FAFA_0%,#EEF8F7_100%)] px-3 py-4 sm:px-5">
+    <main
+      className="dashboard-feature-page h-dvh overflow-x-clip overflow-y-auto bg-[linear-gradient(180deg,#F8FAFA_0%,#EEF8F7_100%)] px-3 py-4 sm:px-5"
+    >
       <section className="mx-auto w-full max-w-3xl space-y-4">
         <div className="dashboard-feature-card rounded-[30px] border border-[#9FD6D5]/70 bg-white p-5 shadow-[0_20px_45px_rgba(31,41,55,0.08)]">
           <div className="flex flex-wrap items-center justify-between gap-3">

@@ -22,6 +22,7 @@ const adminCards = [
   { href: "/admin/notifications", label: "Notifications", icon: "notifications" as AdminIconName, description: "Send announcements to one user, a role, or everyone." },
   { href: "/admin/complaints", label: "Complaints", icon: "complaints" as AdminIconName, description: "Review submitted complaints and resolve them properly." },
   { href: "/admin/roles", label: "Roles / Access", icon: "roles" as AdminIconName, description: "Super admin only. Promote, demote, and govern access." },
+  { href: "/admin/anonymous-voices", label: "Anonymous Voices", icon: "anonymous-voices" as AdminIconName, description: "Manage submission windows and review anonymous feedback." },
 ] as const;
 
 export default async function AdminHomePage() {
@@ -100,7 +101,9 @@ export default async function AdminHomePage() {
                                             ? hasPermissionValue(user.role, permissions, "notifications.view")
                                             : card.href === "/admin/complaints"
                                               ? hasPermissionValue(user.role, permissions, "complaints.view")
-                                              : hasPermissionValue(user.role, permissions, "roles_permissions.view"),
+                                              : card.href === "/admin/anonymous-voices"
+                                                ? hasPermissionValue(user.role, permissions, "anonymous_voices.view")
+                                                : hasPermissionValue(user.role, permissions, "roles_permissions.view"),
               )
               .map((card) => (
                 <LoadingNavButton

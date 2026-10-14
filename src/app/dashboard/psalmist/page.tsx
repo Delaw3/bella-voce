@@ -15,16 +15,16 @@ export default async function PsalmistPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[var(--color-bg)] px-4 py-6 sm:px-6">
+    <main className="dashboard-feature-page h-dvh overflow-x-clip overflow-y-auto bg-[var(--color-bg)] px-4 py-6 sm:px-6">
       <section className="container-shell max-w-4xl space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="font-display text-3xl text-[#1F2937]">Psalmist</h1>
-            <p className="mt-1 text-sm text-slate-600">View the monthly psalmist schedule and selected members.</p>
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <h1 className="truncate font-display text-2xl text-[#1F2937]">Psalmist</h1>
+            <p className="mt-1 line-clamp-1 text-xs text-slate-600">Monthly schedule & members.</p>
           </div>
           <Link
             href="/dashboard"
-            className="rounded-xl border border-[#9FD6D5] bg-white px-4 py-2 text-sm font-medium text-[#1E8C8A] transition hover:bg-[#EAF9F8]"
+            className="shrink-0 rounded-xl border border-[#9FD6D5] bg-white px-3 py-2 text-xs font-semibold text-[#1E8C8A] transition hover:bg-[#EAF9F8]"
           >
             Back
           </Link>

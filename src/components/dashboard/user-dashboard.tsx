@@ -118,6 +118,8 @@ export function UserDashboard({ firstName, role }: UserDashboardProps) {
   const mainScrollRef = useRef<HTMLElement | null>(null);
   const pullStartYRef = useRef<number | null>(null);
   const isPullTrackingRef = useRef(false);
+  const pullFrameRef = useRef<number | null>(null);
+  const pendingPullRef = useRef(0);
   const dismissedAlertIdsRef = useRef<Set<string>>(new Set());
   const [summary, setSummary] = useState<DashboardSummaryResponse>(defaultSummary);
   const [activeAlert, setActiveAlert] = useState<NotificationItem | null>(null);
@@ -249,6 +251,15 @@ export function UserDashboard({ firstName, role }: UserDashboardProps) {
 
   useEffect(() => {
     void loadDashboard();
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (pullFrameRef.current !== null) {
+        window.cancelAnimationFrame(pullFrameRef.current);
+        pullFrameRef.current = null;
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -439,6 +450,12 @@ export function UserDashboard({ firstName, role }: UserDashboardProps) {
       }, "Opening Complaint...", { routeTarget: "/dashboard/complaint" });
       return;
     }
+    if (feature === "anonymous-voices") {
+      void runWithLoader(async () => {
+        router.push("/dashboard/anonymous-voices");
+      }, "Opening Anonymous Voices...", { routeTarget: "/dashboard/anonymous-voices" });
+      return;
+    }
     if (feature === "pay") {
       void runWithLoader(async () => {
         router.push("/dashboard/pay");
@@ -528,6 +545,19 @@ export function UserDashboard({ firstName, role }: UserDashboardProps) {
     }
   }
 
+  // Coalesce rapid `touchmove` updates into one paint per frame so the whole
+  // dashboard isn't re-rendered ~60x/second while a pull gesture is in flight.
+  function schedulePullUpdate(next: number) {
+    pendingPullRef.current = next;
+
+    if (pullFrameRef.current !== null) return;
+
+    pullFrameRef.current = window.requestAnimationFrame(() => {
+      pullFrameRef.current = null;
+      setPullDistance(pendingPullRef.current);
+    });
+  }
+
   function handleTouchStart(event: TouchEvent<HTMLElement>) {
     if (activeSheet || isActionLoading || isPullRefreshing || (mainScrollRef.current?.scrollTop ?? 0) > 0) {
       pullStartYRef.current = null;
@@ -553,13 +583,13 @@ export function UserDashboard({ firstName, role }: UserDashboardProps) {
     const delta = currentY - pullStartYRef.current;
 
     if (delta <= 0) {
-      setPullDistance(0);
+      pendingPullRef.current = 0;
       isPullTrackingRef.current = false;
       return;
     }
 
     if (delta < 16) {
-      setPullDistance(0);
+      pendingPullRef.current = 0;
       return;
     }
 
@@ -567,19 +597,19 @@ export function UserDashboard({ firstName, role }: UserDashboardProps) {
       event.preventDefault();
     }
 
-    const dampedDistance = Math.min(PULL_REFRESH_MAX, delta * 0.45);
-    setPullDistance(dampedDistance);
+    schedulePullUpdate(Math.min(PULL_REFRESH_MAX, delta * 0.45));
   }
 
   function handleTouchEnd() {
     pullStartYRef.current = null;
     isPullTrackingRef.current = false;
 
-    if (pullDistance >= PULL_REFRESH_TRIGGER) {
+    if (pendingPullRef.current >= PULL_REFRESH_TRIGGER) {
       void refreshDashboardFromPull();
       return;
     }
 
+    pendingPullRef.current = 0;
     setPullDistance(0);
   }
 
@@ -647,7 +677,7 @@ export function UserDashboard({ firstName, role }: UserDashboardProps) {
   return (
     <main
       ref={mainScrollRef}
-      className="h-screen overflow-x-clip overflow-y-auto bg-[#F7FAFA] px-4 pt-4 pb-24 md:pb-6"
+      className="h-dvh overflow-x-clip overflow-y-auto bg-[#F7FAFA] px-4 pt-4 pb-24 md:pb-6"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
@@ -975,6 +1005,12 @@ export function UserDashboard({ firstName, role }: UserDashboardProps) {
             void runWithLoader(async () => {
               router.push("/dashboard/complaint");
             }, "Opening Complaint...", { routeTarget: "/dashboard/complaint" });
+          }}
+          onOpenAnonymousVoices={() => {
+            setActiveSheet(null);
+            void runWithLoader(async () => {
+              router.push("/dashboard/anonymous-voices");
+            }, "Opening Anonymous Voices...", { routeTarget: "/dashboard/anonymous-voices" });
           }}
           onOpenSongSelections={() => {
             setActiveSheet(null);

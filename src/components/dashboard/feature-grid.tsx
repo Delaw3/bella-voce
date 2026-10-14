@@ -11,7 +11,8 @@ export type DashboardFeatureKey =
   | "choir-finance"
   | "song-selections"
   | "psalmist"
-  | "complaint";
+  | "complaint"
+  | "anonymous-voices";
 
 type FeatureGridProps = {
   onOpenFeature: (feature: DashboardFeatureKey) => void;
@@ -113,6 +114,14 @@ function Icon({ type }: { type: DashboardFeatureKey }) {
       </svg>
     );
   }
+  if (type === "anonymous-voices") {
+    return (
+      <svg viewBox="0 0 24 24" className={base} fill="none" stroke="currentColor" strokeWidth="1.8">
+        <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />
+        <path d="M8 12h.01M12 12h.01M16 12h.01" />
+      </svg>
+    );
+  }
 
   return (
     <svg viewBox="0 0 24 24" className={base} fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -132,6 +141,7 @@ const features: Array<{ key: DashboardFeatureKey; label: string }> = [
   { key: "attendance-history", label: "Attendance History" },
   { key: "psalmist", label: "Psalmist" },
   { key: "complaint", label: "Complaint" },
+  { key: "anonymous-voices", label: "Anonymous Voices" },
   { key: "choir-finance", label: "Choir Finance" },
   { key: "song-selections", label: "Song Selections" },
 ];

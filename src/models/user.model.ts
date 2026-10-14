@@ -117,6 +117,7 @@ if (
     !existingPermissionEnumValues.includes("waitlist.create") ||
     !existingPermissionEnumValues.includes("payments.approve") ||
     !existingPermissionEnumValues.includes("payment_accounts.view") ||
+    !existingPermissionEnumValues.includes("anonymous_voices.view") ||
     !existingUserModel.schema.path("monthlyDuesRegistered") ||
     !existingUserModel.schema.path("monthlyDuesStartYear") ||
     !existingUserModel.schema.path("removedMonthlyDuesMonths"))
@@ -132,6 +133,7 @@ const User =
   existingPermissionEnumValues.includes("waitlist.create") &&
   existingPermissionEnumValues.includes("payments.approve") &&
   existingPermissionEnumValues.includes("payment_accounts.view") &&
+  existingPermissionEnumValues.includes("anonymous_voices.view") &&
   existingUserModel.schema.path("monthlyDuesRegistered") &&
   existingUserModel.schema.path("monthlyDuesStartYear") &&
   existingUserModel.schema.path("removedMonthlyDuesMonths")

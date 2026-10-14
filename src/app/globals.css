@@ -421,6 +421,9 @@ body {
 
 html {
   scroll-behavior: smooth;
+  /* Prevent iOS text inflation / auto-sizing from breaking our type scale */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
@@ -431,6 +434,34 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   transition: background-color 0.2s ease, color 0.2s ease;
+  /* Remove the translucent tap highlight on mobile so touches feel instant */
+  -webkit-tap-highlight-color: transparent;
+  /* Momentum scrolling on older iOS WebViews */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Comfortable, consistent touch targets across the app */
+button,
+a,
+[role="button"],
+summary,
+input,
+textarea,
+select {
+  touch-action: manipulation;
+}
+
+/* Media-heavy cards shouldn't drag-select text or trigger long-press menus on mobile */
+img,
+svg,
+video {
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
+/* Respect the notched display: give fixed bottom bars room via a shared variable */
+:root {
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 .font-display {

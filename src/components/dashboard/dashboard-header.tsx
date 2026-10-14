@@ -114,27 +114,27 @@ export function DashboardHeader({
           <HeaderActionButton label="Open notifications" onClick={onOpenNotifications}>
             <Bell className="h-5 w-5" strokeWidth={2} />
             {unreadCount > 0 ? (
-              <span className="absolute -right-0.5 -top-0.5 inline-flex min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white shadow-[0_4px_10px_rgba(239,68,68,0.35)]">
+              <span className="absolute -right-0.5 -top-0.5 inline-flex h-4 w-4 min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white shadow-[0_3px_8px_rgba(239,68,68,0.35)]">
                 {unreadCount > 99 ? "99+" : unreadCount}
               </span>
             ) : null}
           </HeaderActionButton>
 
           <HeaderActionButton label="Open menu" onClick={() => setIsMenuOpen((prev) => !prev)}>
-            <Menu className="h-5 w-5" strokeWidth={2} />
+            <Menu className="h-4 w-4" strokeWidth={2} />
           </HeaderActionButton>
 
           {isMenuOpen ? (
-            <div className="dashboard-header-menu absolute right-0 top-14 z-20 w-52 rounded-[24px] border border-[#BFE5E1]/80 bg-white/97 p-2 text-[#1F2937] shadow-[0_20px_40px_rgba(15,107,104,0.14)] backdrop-blur">
+            <div className="dashboard-header-menu absolute right-0 top-full left-0 z-20 mt-2 w-full rounded-2xl border border-[#BFE5E1]/80 bg-white/97 p-1.5 text-[#1F2937] shadow-[0_20px_40px_rgba(15,107,104,0.14)] backdrop-blur">
               <button
                 type="button"
                 onClick={() => {
                   setIsMenuOpen(false);
                   onOpenEditProfile();
                 }}
-                className="dashboard-header-menu-item flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left text-sm font-medium transition hover:bg-[#EEF9F8]"
+                className="dashboard-header-menu-item flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left text-sm font-medium transition hover:bg-[#EEF9F8]"
               >
-                <span className="dashboard-header-menu-icon inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-[#EEF9F8] text-[#0F6B68]">
+                <span className="dashboard-header-menu-icon inline-flex h-8 w-8 items-center justify-center rounded-xl bg-[#EEF9F8] text-[#0F6B68]">
                   <PencilLine className="h-4 w-4" />
                 </span>
                 Edit Profile
@@ -145,9 +145,9 @@ export function DashboardHeader({
                   setIsMenuOpen(false);
                   onOpenTheme();
                 }}
-                className="dashboard-header-menu-item flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left text-sm font-medium transition hover:bg-[#EEF9F8]"
+                className="dashboard-header-menu-item flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left text-sm font-medium transition hover:bg-[#EEF9F8]"
               >
-                <span className="dashboard-header-menu-icon inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-[#EEF9F8] text-[#0F6B68]">
+                <span className="dashboard-header-menu-icon inline-flex h-8 w-8 items-center justify-center rounded-xl bg-[#EEF9F8] text-[#0F6B68]">
                   <Palette className="h-4 w-4" />
                 </span>
                 Change Theme
@@ -158,9 +158,9 @@ export function DashboardHeader({
                   setIsMenuOpen(false);
                   onOpenChangePassword();
                 }}
-                className="dashboard-header-menu-item flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left text-sm font-medium transition hover:bg-[#EEF9F8]"
+                className="dashboard-header-menu-item flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left text-sm font-medium transition hover:bg-[#EEF9F8]"
               >
-                <span className="dashboard-header-menu-icon inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-[#EEF9F8] text-[#0F6B68]">
+                <span className="dashboard-header-menu-icon inline-flex h-8 w-8 items-center justify-center rounded-xl bg-[#EEF9F8] text-[#0F6B68]">
                   <LockKeyhole className="h-4 w-4" />
                 </span>
                 Change Password
@@ -172,9 +172,9 @@ export function DashboardHeader({
                   onLogout();
                 }}
                 disabled={isLoggingOut}
-                className="dashboard-header-menu-item flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left text-sm font-medium text-red-600 transition hover:bg-red-50 disabled:opacity-70"
+                className="dashboard-header-menu-item flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left text-sm font-medium text-red-600 transition hover:bg-red-50 disabled:opacity-70"
               >
-                <span className="dashboard-header-menu-icon inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-red-50 text-red-600">
+                <span className="dashboard-header-menu-icon inline-flex h-8 w-8 items-center justify-center rounded-xl bg-red-50 text-red-600">
                   <LogOut className="h-4 w-4" />
                 </span>
                 {isLoggingOut ? "Logging out..." : "Logout"}

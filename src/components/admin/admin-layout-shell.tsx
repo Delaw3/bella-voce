@@ -9,7 +9,7 @@ import { ADMIN_MAIN_NAV_ITEMS, ADMIN_MORE_ITEMS } from "@/lib/admin-navigation";
 import { hasPermissionValue, isAdminRole, UserRole } from "@/lib/user-config";
 import { capitalizeWords } from "@/lib/utils";
 import { usePathname, useRouter } from "next/navigation";
-import { ReactNode, TouchEvent, useRef, useState } from "react";
+import { ReactNode, TouchEvent, useEffect, useRef, useState } from "react";
 
 type AdminLayoutShellProps = {
   role: UserRole;
@@ -28,6 +28,8 @@ export function AdminLayoutShell({ role, permissions, firstName, children }: Adm
   const mainScrollRef = useRef<HTMLElement | null>(null);
   const pullStartYRef = useRef<number | null>(null);
   const isPullTrackingRef = useRef(false);
+  const pullFrameRef = useRef<number | null>(null);
+  const pendingPullRef = useRef(0);
   const mainItems = ADMIN_MAIN_NAV_ITEMS.filter((item) => hasPermissionValue(role, permissions, item.permission));
   const moreItems = ADMIN_MORE_ITEMS.filter((item) => hasPermissionValue(role, permissions, item.permission));
   const [confirmBackOpen, setConfirmBackOpen] = useState(false);
@@ -54,6 +56,28 @@ export function AdminLayoutShell({ role, permissions, firstName, children }: Adm
       setPullDistance(0);
       setIsPullRefreshing(false);
     }
+  }
+
+  useEffect(() => {
+    return () => {
+      if (pullFrameRef.current !== null) {
+        window.cancelAnimationFrame(pullFrameRef.current);
+        pullFrameRef.current = null;
+      }
+    };
+  }, []);
+
+  // Coalesce rapid `touchmove` updates into one paint per frame so the admin
+  // shell isn't re-rendered ~60x/second while a pull gesture is in flight.
+  function schedulePullUpdate(next: number) {
+    pendingPullRef.current = next;
+
+    if (pullFrameRef.current !== null) return;
+
+    pullFrameRef.current = window.requestAnimationFrame(() => {
+      pullFrameRef.current = null;
+      setPullDistance(pendingPullRef.current);
+    });
   }
 
   function handleTouchStart(event: TouchEvent<HTMLElement>) {
@@ -88,7 +112,7 @@ export function AdminLayoutShell({ role, permissions, firstName, children }: Adm
     const delta = currentY - pullStartYRef.current;
 
     if (delta <= 0) {
-      setPullDistance(0);
+      pendingPullRef.current = 0;
       return;
     }
 
@@ -96,18 +120,19 @@ export function AdminLayoutShell({ role, permissions, firstName, children }: Adm
       event.preventDefault();
     }
 
-    setPullDistance(Math.min(PULL_REFRESH_MAX, delta * 0.45));
+    schedulePullUpdate(Math.min(PULL_REFRESH_MAX, delta * 0.45));
   }
 
   function handleTouchEnd() {
     pullStartYRef.current = null;
     isPullTrackingRef.current = false;
 
-    if (canUsePullRefresh && pullDistance >= PULL_REFRESH_TRIGGER) {
+    if (canUsePullRefresh && pendingPullRef.current >= PULL_REFRESH_TRIGGER) {
       void refreshAdminFromPull();
       return;
     }
 
+    pendingPullRef.current = 0;
     setPullDistance(0);
   }
 
@@ -118,7 +143,7 @@ export function AdminLayoutShell({ role, permissions, firstName, children }: Adm
       <main
         ref={mainScrollRef}
         className={[
-          "admin-shell h-screen overflow-x-clip overflow-y-auto text-[#1F2937]",
+          "admin-shell h-dvh overflow-x-clip overflow-y-auto text-[#1F2937]",
           resolvedTheme === "dark"
             ? "bg-[linear-gradient(180deg,#0b1320_0%,#122031_100%)] text-slate-100"
             : "bg-[linear-gradient(180deg,#F8FAFA_0%,#EEF8F7_100%)]",

@@ -17,7 +17,8 @@ type AdminIconName =
   | "payments"
   | "payment-accounts"
   | "probation-members"
-  | "waitlist";
+  | "waitlist"
+  | "anonymous-voices";
 
 type AdminFeatureIconProps = {
   icon: AdminIconName;
@@ -198,6 +199,15 @@ export function AdminFeatureIcon({ icon, className = "h-5 w-5" }: AdminFeatureIc
         <path d="M9 3v4.5a3 3 0 0 1-.9 2.1L6.8 11a5.5 5.5 0 0 0 3.9 9.4h2.6a5.5 5.5 0 0 0 3.9-9.4l-1.3-1.4A3 3 0 0 1 15 7.5V3" />
         <path d="M9.5 14h5" />
         <path d="M10.5 17h3" />
+      </svg>
+    );
+  }
+
+  if (icon === "anonymous-voices") {
+    return (
+      <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8">
+        <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />
+        <path d="M8 12h.01M12 12h.01M16 12h.01" />
       </svg>
     );
   }

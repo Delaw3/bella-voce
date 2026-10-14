@@ -35,6 +35,7 @@ export const quickAccessOptions: QuickAccessOption[] = [
   { key: "song-selections", label: "Song Selections", description: "Browse and manage songs" },
   { key: "excuses", label: "Excuses", description: "Submit or view your excuses" },
   { key: "complaint", label: "Complaint", description: "Share choir concerns" },
+  { key: "anonymous-voices", label: "Anonymous Voices", description: "Submit anonymous thoughts" },
 ];
 
 const iconClassName = "h-5 w-5 text-[#0F6B68]";

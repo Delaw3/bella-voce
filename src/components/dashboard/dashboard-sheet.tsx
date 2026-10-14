@@ -14,7 +14,7 @@ export function DashboardSheet({ isOpen, title, onClose, children }: DashboardSh
 
   return (
     <div className="fixed inset-0 z-50 flex items-end bg-[#1F2937]/45 p-3 sm:items-center sm:justify-center sm:p-6">
-      <div className="dashboard-sheet-shell max-h-[92vh] w-full overflow-hidden rounded-3xl bg-white shadow-2xl sm:max-w-2xl">
+      <div className="dashboard-sheet-shell max-h-[92dvh] w-full overflow-hidden rounded-3xl bg-white shadow-2xl sm:max-w-2xl">
         <div className="dashboard-sheet-header flex items-center justify-between border-b border-slate-100 px-4 py-3 sm:px-5">
           <h2 className="dashboard-sheet-title font-display text-2xl text-[#1F2937]">{title}</h2>
           <button
@@ -28,7 +28,7 @@ export function DashboardSheet({ isOpen, title, onClose, children }: DashboardSh
             </svg>
           </button>
         </div>
-        <div className="dashboard-sheet-body max-h-[calc(92vh-4rem)] overflow-y-auto p-4 sm:p-5">{children}</div>
+        <div className="dashboard-sheet-body max-h-[calc(92dvh-4rem)] overflow-y-auto p-4 sm:p-5">{children}</div>
       </div>
     </div>
   );

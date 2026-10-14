@@ -13,6 +13,7 @@ type DashboardMorePanelProps = {
   onOpenAttendanceHistory: () => void;
   onOpenPay?: () => void;
   onOpenPaymentHistory?: () => void;
+  onOpenAnonymousVoices?: () => void;
 };
 
 type MoreAction = {
@@ -35,6 +36,7 @@ export function DashboardMorePanel({
   onOpenAttendanceHistory,
   onOpenPay,
   onOpenPaymentHistory,
+  onOpenAnonymousVoices,
 }: DashboardMorePanelProps) {
   const actions: MoreAction[] = [
     ...(onOpenExcuses
@@ -171,6 +173,22 @@ export function DashboardMorePanel({
         </svg>
       ),
     },
+    ...(onOpenAnonymousVoices
+      ? [
+          {
+            key: "anonymous-voices",
+            label: "Anonymous Voices",
+            description: "Share anonymous thoughts, suggestions, and feedback.",
+            onClick: onOpenAnonymousVoices,
+            icon: (
+              <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />
+                <path d="M8 12h.01M12 12h.01M16 12h.01" />
+              </svg>
+            ),
+          },
+        ]
+      : []),
   ];
 
   return (

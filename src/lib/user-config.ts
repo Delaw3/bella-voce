@@ -46,6 +46,7 @@ export const PERMISSION_GROUPS = {
   audit_logs: ["view"],
   push_notifications: ["send"],
   roles_permissions: ["view", "edit"],
+  anonymous_voices: ["view", "create", "manage", "delete"],
 } as const;
 
 type PermissionFeature = keyof typeof PERMISSION_GROUPS;
@@ -83,12 +84,13 @@ export const PERMISSION_LABELS: Record<PermissionFeature, string> = {
   audit_logs: "Audit Logs",
   push_notifications: "Push Notifications",
   roles_permissions: "Roles & Permissions",
+  anonymous_voices: "Anonymous Voices",
 };
 
 export const ADMIN_ROLES: UserRole[] = ["ADMIN", "SUPER_ADMIN"];
 
 export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, PermissionKey[]> = {
-  USER: [],
+  USER: ["anonymous_voices.create"],
   ADMIN: ["dashboard_admin.view"],
   SUPER_ADMIN: ALL_PERMISSIONS,
 };
@@ -110,7 +112,7 @@ export function resolvePermissions(role: UserRole, customPermissions?: string[] 
   }
 
   if (role !== "ADMIN") {
-    return [];
+    return [...(DEFAULT_ROLE_PERMISSIONS[role] ?? [])];
   }
 
   const permissions = new Set<PermissionKey>(DEFAULT_ROLE_PERMISSIONS[role] ?? []);

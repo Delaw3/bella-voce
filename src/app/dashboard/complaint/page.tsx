@@ -15,18 +15,18 @@ export default async function ComplaintPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[linear-gradient(180deg,#F8FAFA_0%,#EEF8F7_100%)] px-4 py-6 sm:px-6">
+    <main className="dashboard-feature-page h-dvh overflow-x-clip overflow-y-auto bg-[linear-gradient(180deg,#F8FAFA_0%,#EEF8F7_100%)] px-4 py-6 sm:px-6">
       <section className="container-shell max-w-2xl space-y-4">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <h1 className="font-display text-3xl text-[#1F2937]">Complaint</h1>
-            <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">
-              Submit a private complaint to the Bella Voce administration team.
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <h1 className="truncate font-display text-2xl text-[#1F2937]">Complaint</h1>
+            <p className="mt-1 line-clamp-1 text-xs text-slate-600">
+              Private complaint to admin.
             </p>
           </div>
           <Link
             href="/dashboard"
-            className="rounded-xl border border-[#9FD6D5] bg-white px-4 py-2 text-sm font-medium text-[#1E8C8A] transition hover:bg-[#EAF9F8]"
+            className="shrink-0 rounded-xl border border-[#9FD6D5] bg-white px-3 py-2 text-xs font-semibold text-[#1E8C8A] transition hover:bg-[#EAF9F8]"
           >
             Back
           </Link>

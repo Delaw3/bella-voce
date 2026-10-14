@@ -182,7 +182,7 @@ export function MembersPanel({ initialMembers, currentUserId, onlyWithPosts = fa
 
       {selectedMember ? (
         <div className="fixed inset-0 z-50 flex items-end bg-[#1F2937]/45 p-3 sm:items-center sm:justify-center sm:p-6">
-          <div className="max-h-[92vh] w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-2xl">
+          <div className="max-h-[92dvh] w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-2xl">
             <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
               <h3 className="font-display text-2xl text-[#1F2937]">Member Profile</h3>
               <button
@@ -197,7 +197,7 @@ export function MembersPanel({ initialMembers, currentUserId, onlyWithPosts = fa
               </button>
             </div>
 
-            <div className="max-h-[calc(92vh-4rem)] space-y-3 overflow-y-auto p-4">
+            <div className="max-h-[calc(92dvh-4rem)] space-y-3 overflow-y-auto p-4">
               <div className="flex flex-col items-center gap-3 rounded-xl border border-slate-100 bg-slate-50 px-3 py-4">
                 {selectedMember.profilePicture ? (
                   <button

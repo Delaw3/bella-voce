@@ -43,4 +43,10 @@ export const ADMIN_MORE_ITEMS = [
     permission: "payment_accounts.view" as PermissionKey,
   },
   { href: "/admin/roles", label: "Roles & Permissions", icon: "roles", permission: "roles_permissions.view" as PermissionKey },
+  {
+    href: "/admin/anonymous-voices",
+    label: "Anonymous Voices",
+    icon: "anonymous-voices",
+    permission: "anonymous_voices.view" as PermissionKey,
+  },
 ] as const;
