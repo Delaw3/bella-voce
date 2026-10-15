@@ -10,7 +10,7 @@ import {
   type AnonymousVoicesScheduleStatus,
   type AnonymousVoicesSettingsDTO,
 } from "@/lib/anonymous-voices/client";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 type MessagesResponse = {
   messages?: AnonymousMessageItem[];
@@ -66,6 +66,9 @@ export function AnonymousVoicesAdmin() {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [selectedMessage, setSelectedMessage] = useState<AnonymousMessageItem | null>(null);
   const [feedback, setFeedback] = useState<{ tone: "success" | "error"; text: string } | null>(null);
+  const [isCapturingShot, setIsCapturingShot] = useState(false);
+  const [shotFeedback, setShotFeedback] = useState<string | null>(null);
+  const shotCardRef = useRef<HTMLDivElement | null>(null);
 
   const loadSettings = useCallback(async () => {
     setIsLoadingSettings(true);
@@ -132,6 +135,69 @@ export function AnonymousVoicesAdmin() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [selectedMessage]);
+
+  useEffect(() => {
+    setShotFeedback(null);
+    setIsCapturingShot(false);
+  }, [selectedMessage?.id]);
+
+  useEffect(() => {
+    if (!shotFeedback) return;
+    const timeout = window.setTimeout(() => setShotFeedback(null), 3000);
+    return () => window.clearTimeout(timeout);
+  }, [shotFeedback]);
+
+  async function handleScreenshotMessage() {
+    if (!selectedMessage || !shotCardRef.current || isCapturingShot) return;
+    setIsCapturingShot(true);
+    setShotFeedback(null);
+    try {
+      const { toPng } = await import("html-to-image");
+      const dataUrl = await toPng(shotCardRef.current, {
+        cacheBust: true,
+        pixelRatio: 2,
+      });
+      const fileName = `bella-voce-anonymous-${selectedMessage.id.slice(-6)}.png`;
+      const response = await fetch(dataUrl);
+      const blob = await response.blob();
+      const file = new File([blob], fileName, { type: "image/png" });
+
+      if (typeof navigator !== "undefined" && "share" in navigator) {
+        try {
+          const nav = navigator as Navigator & {
+            canShare?: (data: { files: File[] }) => boolean;
+            share?: (data: { files: File[]; title?: string; text?: string }) => Promise<void>;
+          };
+          if (nav.canShare?.({ files: [file] })) {
+            await nav.share({
+              files: [file],
+              title: "Bella Voce Anonymous Voice",
+              text: "Anonymous message from Bella Voce",
+            });
+            setShotFeedback("Image shared successfully.");
+            return;
+          }
+        } catch (shareError) {
+          if (shareError instanceof DOMException && shareError.name === "AbortError") {
+            return;
+          }
+          // Fall through to download when native share is unavailable or fails.
+        }
+      }
+
+      const link = document.createElement("a");
+      link.download = fileName;
+      link.href = dataUrl;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setShotFeedback("Screenshot saved as PNG.");
+    } catch {
+      setShotFeedback("Unable to capture screenshot. Please try again.");
+    } finally {
+      setIsCapturingShot(false);
+    }
+  }
 
   async function handleQuickToggle(enabled: boolean) {
     if (!canManage) return;
@@ -526,25 +592,63 @@ export function AnonymousVoicesAdmin() {
                 <line x1="18" y1="6" x2="6" y2="18" />
               </svg>
             </button>
-            <div className="flex items-center gap-2 pr-10">
-              <span
-                className={
-                  selectedMessage.status === "NEW"
-                    ? "rounded-full bg-amber-100 px-2.5 py-1 text-[11px] font-semibold text-amber-800"
-                    : "rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-semibold text-emerald-800"
-                }
+            <div
+              ref={shotCardRef}
+              className="bg-white p-1"
+            >
+              <div className="flex items-center gap-2 pr-10">
+                <span
+                  className={
+                    selectedMessage.status === "NEW"
+                      ? "rounded-full bg-amber-100 px-2.5 py-1 text-[11px] font-semibold text-amber-800"
+                      : "rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-semibold text-emerald-800"
+                  }
+                >
+                  {selectedMessage.status}
+                </span>
+                <span className="text-[11px] text-slate-400">{formatLagosDateTime(selectedMessage.createdAt)}</span>
+              </div>
+              <div className="mt-3 flex items-center gap-2">
+                <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#2CA6A4] text-sm font-bold text-white">
+                  B
+                </span>
+                <div className="leading-tight">
+                  <p className="text-xs font-bold text-[#1F2937]">Bella Voce</p>
+                  <p className="text-[11px] text-slate-500">Anonymous Voice</p>
+                </div>
+              </div>
+              <h3 className="mt-3 text-lg font-semibold text-[#1F2937]">Anonymous Message</h3>
+              <div className="mt-3 rounded-2xl bg-[#F8FAFA] p-4">
+                <p className="whitespace-pre-wrap text-sm leading-6 text-[#1F2937]">{selectedMessage.message}</p>
+              </div>
+              <p className="mt-3 text-[11px] text-slate-400">
+                Last updated: {formatLagosDateTime(selectedMessage.updatedAt)}
+              </p>
+            </div>
+            <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+              <button
+                type="button"
+                disabled={isCapturingShot}
+                onClick={() => void handleScreenshotMessage()}
+                className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl border border-[#9FD6D5] bg-[#EAF9F8] px-4 py-2.5 text-sm font-semibold text-[#1E8C8A] transition hover:bg-[#d8f1f0] active:scale-[0.99] disabled:opacity-60"
               >
-                {selectedMessage.status}
-              </span>
-              <span className="text-[11px] text-slate-400">{formatLagosDateTime(selectedMessage.createdAt)}</span>
+                <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                  <circle cx="12" cy="13" r="4" />
+                </svg>
+                {isCapturingShot ? "Capturing..." : "Screenshot"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedMessage(null)}
+                className="inline-flex flex-1 items-center justify-center rounded-2xl bg-[#2CA6A4] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#1E8C8A] active:scale-[0.99]"
+              >
+                Close
+              </button>
             </div>
-            <h3 className="mt-3 text-lg font-semibold text-[#1F2937]">Anonymous Message</h3>
-            <div className="mt-3 rounded-2xl bg-[#F8FAFA] p-4">
-              <p className="whitespace-pre-wrap text-sm leading-6 text-[#1F2937]">{selectedMessage.message}</p>
-            </div>
-            <p className="mt-3 text-[11px] text-slate-400">
-              Last updated: {formatLagosDateTime(selectedMessage.updatedAt)}
-            </p>
+            {shotFeedback ? (
+              <p className="mt-2 text-center text-xs font-medium text-slate-500">{shotFeedback}</p>
+            ) : null}
           </div>
         </div>
       ) : null}
