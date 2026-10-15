@@ -9,9 +9,11 @@ import { notifyManyUsers } from "@/lib/push-notifications";
 import { getRedisClient } from "@/lib/redis";
 import { resolvePermissions } from "@/lib/user-config";
 import { AnonymousMessageRecord } from "@/models/anonymous-message.model";
+import AnonymousVoiceLink, { AnonymousVoiceLinkRecord } from "@/models/anonymous-voice-link.model";
 import AnonymousVoicesSettings, { AnonymousVoicesSettingsRecord } from "@/models/anonymous-voices-settings.model";
 import User from "@/models/user.model";
 import mongoose from "mongoose";
+import { createHash, randomBytes } from "crypto";
 
 // The pure, client-safe constants, types and Lagos date helpers now live in
 // "@/lib/anonymous-voices/client" so client components never pull in this
@@ -176,6 +178,138 @@ export async function updateAnonymousVoicesSettingsRecord(
   ).lean();
 
   return updated as AnonymousVoicesSettingsRecord;
+}
+
+// ---------------------------------------------------------------------------
+// Public shareable link (two-way: app members + anyone with the link)
+// The same singleton link record is reused until the admin regenerates it.
+// Only the SHA-256 hash of the token is stored; the raw token only ever
+// appears inside the URL handed to the admin.
+// ---------------------------------------------------------------------------
+
+export function hashAnonymousLinkToken(token: string): string {
+  return createHash("sha256").update(token).digest("hex");
+}
+
+export function generateAnonymousLinkToken(): string {
+  return randomBytes(32).toString("base64url");
+}
+
+export type AnonymousLinkInfo = {
+  isActive: boolean;
+  label: string | null;
+  createdAt: string | null;
+  updatedAt: string | null;
+};
+
+export function serializeAnonymousLink(doc: AnonymousVoiceLinkRecord | null): AnonymousLinkInfo | null {
+  if (!doc || !doc.isActive) return null;
+  return {
+    isActive: doc.isActive,
+    label: doc.label ?? null,
+    createdAt: doc.createdAt instanceof Date ? doc.createdAt.toISOString() : null,
+    updatedAt: doc.updatedAt instanceof Date ? doc.updatedAt.toISOString() : null,
+  };
+}
+
+/**
+ * Returns the active public link record, or null when none exists / revoked.
+ */
+export async function getActiveAnonymousLink(): Promise<AnonymousVoiceLinkRecord | null> {
+  await connectToDatabase();
+  const existing = await AnonymousVoiceLink.findOne({ key: "default", isActive: true }).lean();
+  return (existing as AnonymousVoiceLinkRecord | null) ?? null;
+}
+
+/**
+ * Creates (or rotates) the singleton public link. The old token stops
+ * working immediately. Returns the RAW token once — it is never stored.
+ */
+export async function regenerateAnonymousLink(
+  actorUserId?: string,
+): Promise<{ token: string; record: AnonymousVoiceLinkRecord }> {
+  await connectToDatabase();
+  const token = generateAnonymousLinkToken();
+  const tokenHash = hashAnonymousLinkToken(token);
+
+  const updated = await AnonymousVoiceLink.findOneAndUpdate(
+    { key: "default" },
+    {
+      $set: {
+        tokenHash,
+        isActive: true,
+        revokedAt: null,
+        ...(actorUserId ? { createdBy: new mongoose.Types.ObjectId(actorUserId) } : {}),
+      },
+      $setOnInsert: { key: "default" },
+    },
+    { upsert: true, new: true, setDefaultsOnInsert: true },
+  ).lean();
+
+  return { token, record: updated as AnonymousVoiceLinkRecord };
+}
+
+/**
+ * Resolves a raw URL token to its active link record. Null = invalid/revoked.
+ */
+export async function resolveAnonymousLinkToken(token: string): Promise<AnonymousVoiceLinkRecord | null> {
+  if (!token || typeof token !== "string" || token.length < 20) return null;
+  await connectToDatabase();
+  const tokenHash = hashAnonymousLinkToken(token);
+  const existing = await AnonymousVoiceLink.findOne({
+    key: "default",
+    tokenHash,
+    isActive: true,
+  }).lean();
+  return (existing as AnonymousVoiceLinkRecord | null) ?? null;
+}
+
+// In-memory fallback for public (IP-based) rate limits when Redis is absent.
+const inMemoryPublicRateLimits = new Map<string, number>();
+
+/**
+ * IP-based rate limit for link submissions (no login available).
+ * Mirrors the 30s app cooldown per sender.
+ */
+export async function checkAnonymousPublicRateLimit(ip: string): Promise<{
+  allowed: boolean;
+  retryAfterSeconds?: number;
+}> {
+  const key = ip?.trim() ? ip.trim().slice(0, 80) : "unknown";
+
+  const redis = getRedisClient();
+  if (redis) {
+    try {
+      const redisKey = `ratelimit:anon_voices:public:${key}`;
+      const result = await redis.set(redisKey, "1", { nx: true, ex: SUBMISSION_COOLDOWN_SECONDS });
+      if (result === null) {
+        return { allowed: false, retryAfterSeconds: SUBMISSION_COOLDOWN_SECONDS };
+      }
+      return { allowed: true };
+    } catch {
+      // Fall through to in-memory check if Redis fails
+    }
+  }
+
+  const now = Date.now();
+  const lastTime = inMemoryPublicRateLimits.get(key);
+  if (lastTime && now - lastTime < SUBMISSION_COOLDOWN_SECONDS * 1000) {
+    const remaining = Math.ceil((SUBMISSION_COOLDOWN_SECONDS * 1000 - (now - lastTime)) / 1000);
+    return { allowed: false, retryAfterSeconds: remaining };
+  }
+
+  inMemoryPublicRateLimits.set(key, now);
+
+  if (inMemoryPublicRateLimits.size > 5000) {
+    const cutoff = now - 60000;
+    for (const [mapKey, timestamp] of inMemoryPublicRateLimits.entries()) {
+      if (timestamp < cutoff) {
+        inMemoryPublicRateLimits.delete(mapKey);
+      }
+    }
+  }
+
+  return { allowed: true };
 }
 
 /**

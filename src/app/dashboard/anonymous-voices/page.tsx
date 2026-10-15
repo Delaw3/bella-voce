@@ -1,4 +1,4 @@
-import { AnonymousVoicesClient } from "@/components/dashboard/anonymous-voices-client";
+import { AnonymousVoicesForm } from "@/components/voices/anonymous-voices-form";
 import { getAuthenticatedUser } from "@/lib/auth-session";
 import { redirect } from "next/navigation";
 
@@ -21,7 +21,12 @@ export default async function AnonymousVoicesPage() {
   return (
     <main className="dashboard-feature-page h-dvh overflow-x-clip overflow-y-auto bg-[linear-gradient(180deg,#F8FAFA_0%,#EEF8F7_100%)] px-4 py-6 sm:px-6">
       <section className="container-shell mx-auto max-w-2xl space-y-4">
-        <AnonymousVoicesClient />
+        <AnonymousVoicesForm
+          statusUrl="/api/anonymous-voices/status"
+          submitUrl="/api/anonymous-voices"
+          showCloseButton
+          privacyLead="Your member identity — name, email, member ID, and profile picture — is never recorded or linked to this message. Choir administrators can only review the text and the submission time."
+        />
       </section>
     </main>
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
+import { AnonymousVoicesLinkManager } from "@/components/admin/anonymous-voices-link-manager";
 import { useCan } from "@/components/admin/admin-session-provider";
 import { EmptyState } from "@/components/admin/empty-state";
 import { ActionModal } from "@/components/ui/action-modal";
@@ -378,6 +379,7 @@ export function AnonymousVoicesAdmin() {
             </div>
           ) : null}
         </div>
+        {canManage ? <AnonymousVoicesLinkManager /> : null}
       </section>
 
       {/* Section 2: Admin Message Inbox */}
