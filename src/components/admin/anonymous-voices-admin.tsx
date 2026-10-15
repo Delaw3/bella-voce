@@ -581,22 +581,37 @@ export function AnonymousVoicesAdmin() {
             className="relative max-h-[85vh] w-full max-w-lg overflow-y-auto rounded-[28px] border border-[#9FD6D5]/70 bg-white p-5 shadow-[0_28px_60px_rgba(31,41,55,0.22)] sm:p-6"
             onClick={(e) => e.stopPropagation()}
           >
-            <button
-              type="button"
-              onClick={() => setSelectedMessage(null)}
-              aria-label="Close message"
-              className="absolute right-4 top-4 inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition hover:bg-slate-100 hover:text-slate-800"
-            >
-              <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
-                <line x1="6" y1="6" x2="18" y2="18" />
-                <line x1="18" y1="6" x2="6" y2="18" />
-              </svg>
-            </button>
+            <div className="absolute right-4 top-4 flex items-center gap-2">
+              <button
+                type="button"
+                disabled={isCapturingShot}
+                onClick={() => void handleScreenshotMessage()}
+                aria-label="Take screenshot"
+                title="Screenshot"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[#9FD6D5] bg-[#EAF9F8] text-[#1E8C8A] transition hover:bg-[#d8f1f0] active:scale-95 disabled:opacity-60"
+              >
+                <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                  <circle cx="12" cy="13" r="4" />
+                </svg>
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedMessage(null)}
+                aria-label="Close message"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition hover:bg-slate-100 hover:text-slate-800"
+              >
+                <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                </svg>
+              </button>
+            </div>
             <div
               ref={shotCardRef}
               className="bg-white p-1"
             >
-              <div className="flex items-center gap-2 pr-10">
+              <div className="flex items-center gap-2 pr-20">
                 <span
                   className={
                     selectedMessage.status === "NEW"
@@ -617,33 +632,22 @@ export function AnonymousVoicesAdmin() {
                   <p className="text-[11px] text-slate-500">Anonymous Voice</p>
                 </div>
               </div>
-              <h3 className="mt-3 text-lg font-semibold text-[#1F2937]">Anonymous Message</h3>
               <div className="mt-3 rounded-2xl bg-[#F8FAFA] p-4">
                 <p className="whitespace-pre-wrap text-sm leading-6 text-[#1F2937]">{selectedMessage.message}</p>
               </div>
-              <p className="mt-3 text-[11px] text-slate-400">
-                Last updated: {formatLagosDateTime(selectedMessage.updatedAt)}
-              </p>
             </div>
-            <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+            <div className="mt-4">
               <button
                 type="button"
                 disabled={isCapturingShot}
                 onClick={() => void handleScreenshotMessage()}
-                className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl border border-[#9FD6D5] bg-[#EAF9F8] px-4 py-2.5 text-sm font-semibold text-[#1E8C8A] transition hover:bg-[#d8f1f0] active:scale-[0.99] disabled:opacity-60"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-[#9FD6D5] bg-[#EAF9F8] px-4 py-2.5 text-sm font-semibold text-[#1E8C8A] transition hover:bg-[#d8f1f0] active:scale-[0.99] disabled:opacity-60"
               >
                 <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
                   <circle cx="12" cy="13" r="4" />
                 </svg>
                 {isCapturingShot ? "Capturing..." : "Screenshot"}
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedMessage(null)}
-                className="inline-flex flex-1 items-center justify-center rounded-2xl bg-[#2CA6A4] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#1E8C8A] active:scale-[0.99]"
-              >
-                Close
               </button>
             </div>
             {shotFeedback ? (
