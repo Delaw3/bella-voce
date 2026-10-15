@@ -607,22 +607,22 @@ export function AnonymousVoicesAdmin() {
                 </svg>
               </button>
             </div>
+            <div className="flex items-center gap-2 pr-20">
+              <span
+                className={
+                  selectedMessage.status === "NEW"
+                    ? "rounded-full bg-amber-100 px-2.5 py-1 text-[11px] font-semibold text-amber-800"
+                    : "rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-semibold text-emerald-800"
+                }
+              >
+                {selectedMessage.status}
+              </span>
+              <span className="text-[11px] text-slate-400">{formatLagosDateTime(selectedMessage.createdAt)}</span>
+            </div>
             <div
               ref={shotCardRef}
               className="bg-white p-1"
             >
-              <div className="flex items-center gap-2 pr-20">
-                <span
-                  className={
-                    selectedMessage.status === "NEW"
-                      ? "rounded-full bg-amber-100 px-2.5 py-1 text-[11px] font-semibold text-amber-800"
-                      : "rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-semibold text-emerald-800"
-                  }
-                >
-                  {selectedMessage.status}
-                </span>
-                <span className="text-[11px] text-slate-400">{formatLagosDateTime(selectedMessage.createdAt)}</span>
-              </div>
               <div className="mt-3 flex items-center gap-2">
                 <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#2CA6A4] text-sm font-bold text-white">
                   B
@@ -635,20 +635,6 @@ export function AnonymousVoicesAdmin() {
               <div className="mt-3 rounded-2xl bg-[#F8FAFA] p-4">
                 <p className="whitespace-pre-wrap text-sm leading-6 text-[#1F2937]">{selectedMessage.message}</p>
               </div>
-            </div>
-            <div className="mt-4">
-              <button
-                type="button"
-                disabled={isCapturingShot}
-                onClick={() => void handleScreenshotMessage()}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-[#9FD6D5] bg-[#EAF9F8] px-4 py-2.5 text-sm font-semibold text-[#1E8C8A] transition hover:bg-[#d8f1f0] active:scale-[0.99] disabled:opacity-60"
-              >
-                <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-                  <circle cx="12" cy="13" r="4" />
-                </svg>
-                {isCapturingShot ? "Capturing..." : "Screenshot"}
-              </button>
             </div>
             {shotFeedback ? (
               <p className="mt-2 text-center text-xs font-medium text-slate-500">{shotFeedback}</p>
